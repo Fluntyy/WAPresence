@@ -1,2 +1,4 @@
 selenium
 winsdk
+PyQt5
+PySide6
