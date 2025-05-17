@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import tempfile
 from configparser import ConfigParser
 from selenium.webdriver.common.by import By
 from PyQt5 import QtWidgets, QtGui
@@ -10,6 +11,8 @@ from PyQt5.QtWidgets import QDialog
 from shared import get_update_interval, get_format_string, set_update_interval, set_format_string, settings_updated_event, set_current_source, get_current_source
 
 config = ConfigParser()
+temp_dir = tempfile.gettempdir()
+qr_path = os.path.join(temp_dir, "qr.png")
 
 """Login Window to display the QR code"""
 class LoginWindow(QtWidgets.QMainWindow):
@@ -35,8 +38,8 @@ class LoginWindow(QtWidgets.QMainWindow):
             while True:
                 try:
                     qr = self.driver.find_element(By.XPATH, "//canvas")
-                    qr.screenshot("qr.png")
-                    pixmap = QtGui.QPixmap("qr.png")
+                    qr.screenshot(qr_path)
+                    pixmap = QtGui.QPixmap(qr_path)
                     self.QR.setPixmap(pixmap)
                 except Exception:
                     self.QR.setText("Loading...")
@@ -198,7 +201,7 @@ class SettingsWindow(QtWidgets.QMainWindow):
     def exit_application(self):
         """Exit the application and restore the original bio"""
         print("Exiting application...")
-        os.remove("qr.png")
+        os.remove(qr_path)
         self.restore_bio_signal.emit()
         self.driver.quit()
         os._exit(0)
