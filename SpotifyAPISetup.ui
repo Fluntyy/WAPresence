@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SetupSpotifyAPIDialog</class>
+ <widget class="QDialog" name="SetupSpotifyAPIDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>432</width>
+    <height>191</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>432</width>
+    <height>191</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>432</width>
+    <height>191</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>WAPresence - Setup Spotify API</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
+  <widget class="QDialogButtonBox" name="ActionButton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>150</y>
+     <width>411</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="whatsThis">
+    <string notr="true"/>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   </property>
+   <property name="centerButtons">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="DialogText">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>411</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <pointsize>16</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>You need to setup the Spotify API first!</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="ClientID">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>60</y>
+     <width>311</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="whatsThis">
+    <string extracomment="You can get this from Spotify Developer website."/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ClientIDLabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Client ID:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ClientSecretLabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Client Secret:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="ClientSecret">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>90</y>
+     <width>311</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="whatsThis">
+    <string extracomment="Dont share this with anyone! You can get this from Spotify Developer website."/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="RedirectURILabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Redirect URI:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="RedirectURI">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>120</y>
+     <width>251</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="whatsThis">
+    <string extracomment="Defaults to http://localhost:6969/callback (nice)"/>
+   </property>
+   <property name="text">
+    <string>http://localhost:6969/callback</string>
+   </property>
+   <property name="readOnly">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="EditRedirectButton">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>120</y>
+     <width>51</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="whatsThis">
+    <string extracomment="Edit the Redirect URI (if port already used somehow)"/>
+   </property>
+   <property name="text">
+    <string>Edit</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>ActionButton</sender>
+   <signal>accepted()</signal>
+   <receiver>SetupSpotifyAPIDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ActionButton</sender>
+   <signal>rejected()</signal>
+   <receiver>SetupSpotifyAPIDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

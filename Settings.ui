@@ -128,7 +128,7 @@
       <x>240</x>
       <y>20</y>
       <width>101</width>
-      <height>23</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -176,7 +176,7 @@
       <x>130</x>
       <y>20</y>
       <width>101</width>
-      <height>23</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -212,70 +212,52 @@
      <string>List: [artist] [title] [album] [tracknum] [bio]</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="SaveConfigCheck">
+   <widget class="QPushButton" name="RestoreButton">
     <property name="geometry">
      <rect>
       <x>130</x>
       <y>60</y>
-      <width>201</width>
+      <width>211</width>
       <height>21</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <family>Segoe UI</family>
-      <pointsize>10</pointsize>
-     </font>
-    </property>
     <property name="text">
-     <string>Save bio text and configuration</string>
-    </property>
-    <property name="checked">
-     <bool>false</bool>
+     <string>Reset to Default</string>
     </property>
    </widget>
-   <widget class="QLabel" name="SaveConfigLabel">
+   <widget class="QRadioButton" name="LocalRadio">
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>80</y>
-      <width>211</width>
-      <height>31</height>
+      <y>90</y>
+      <width>82</width>
+      <height>21</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <family>Segoe UI</family>
-      <pointsize>8</pointsize>
-      <italic>true</italic>
-     </font>
+    <property name="text">
+     <string>Local Media</string>
     </property>
-    <property name="cursor">
-     <cursorShape>WhatsThisCursor</cursorShape>
+   </widget>
+   <widget class="QRadioButton" name="SpotifyRadio">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>90</y>
+      <width>61</width>
+      <height>21</height>
+     </rect>
     </property>
     <property name="text">
-     <string>*This setting doesn't save bio text. If you 
-disable this, the settings will be deleted.</string>
-    </property>
-    <property name="textFormat">
-     <enum>Qt::AutoText</enum>
+     <string>Spotify</string>
     </property>
    </widget>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>360</width>
-     <height>19</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSpotify">
+   <property name="text">
+    <string>Spotify</string>
+   </property>
+  </action>
  </widget>
- <resources>
-  <include location="resource.qrc"/>
- </resources>
  <connections/>
 </ui>

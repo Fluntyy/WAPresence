@@ -1,4 +1,4 @@
 selenium
 winsdk
 PyQt5
-PySide6
+spotipy
