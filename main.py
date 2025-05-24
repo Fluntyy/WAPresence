@@ -1,8 +1,10 @@
 import time
 import asyncio
 import threading
+import argparse
+import ctypes
+import sys
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
@@ -10,7 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from PyQt5.QtWidgets import QApplication
 from gui import LoginWindow, SettingsWindow  # Import GUI classes
-from shared import get_update_interval, get_format_string, settings_updated_event, get_current_source, source_changed_event
+from shared import get_update_interval, settings_updated_event, get_current_source, source_changed_event
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from configparser import ConfigParser
@@ -25,13 +27,18 @@ sp = None
 config = ConfigParser()
 
 """Initialize the Selenium WebDriver"""
-def init_driver():
+def init_driver(debug=False):
     global driver
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")  # Fix for crashing issues
     chrome_options.add_argument("--disable-dev-shm-usage")  # Fix for shared memory issues
     chrome_options.add_argument("--disable-gpu")  # Optional: Disable GPU acceleration
-    chrome_options.add_argument("--headless")  # Optional: Run in headless mode
+
+    if not debug:
+        chrome_options.add_argument("--headless")  # Optional: Run in headless mode
+    else:
+        print("DEBUG enabled: Chrome window will be visible.")
+
     driver = webdriver.Chrome(options=chrome_options)
     driver.get("https://web.whatsapp.com/")
     driver.set_window_size(520, 850)
@@ -183,11 +190,29 @@ def update_bio_loop():
             print("Error updating bio. Retrying...")
             time.sleep(1)
 
+def attach_console():
+    """Attach a console window for debugging."""
+    if not sys.stdout:  # Check if the app is running without a console
+        ctypes.windll.kernel32.AllocConsole()
+        sys.stdout = open("CONOUT$", "w")  # Redirect stdout to the console
+        sys.stderr = open("CONOUT$", "w")  # Redirect stderr to the console
+
 """Main function"""
 def main():
     global driver, update_interval, format_string
-    # chromedriver_autoinstaller.install()
-    init_driver()
+
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="WAPresence Application")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode to open Chrome window and show logs")
+    args = parser.parse_args()
+
+    # Attach a console if debug mode is enabled
+    if args.debug:
+        attach_console()
+        print("DEBUG enabled: Console attached.")
+
+    # Initialize the WebDriver with the debug flag
+    init_driver(debug=args.debug)
 
     app = QApplication([])
 
