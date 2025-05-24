@@ -197,6 +197,22 @@ class SettingsWindow(QtWidgets.QMainWindow):
 
         QtWidgets.QMessageBox.information(self, "Defaults Restored", "Settings have been restored to defaults.")
         settings_updated_event.set()  # Signal the update_bio_loop to reload settings
+        
+    def closeEvent(self, event):
+        """Handle the window close event"""
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            "WAPresence",
+            "Are you sure you want to exit?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No
+        )
+
+        if reply == QtWidgets.QMessageBox.Yes:
+            self.exit_application()
+            event.accept()
+        else:
+            event.ignore()
 
     def exit_application(self):
         """Exit the application and restore the original bio"""
