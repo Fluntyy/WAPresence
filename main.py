@@ -261,6 +261,8 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="WAPresence Application")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode to open Chrome window and show logs")
+    parser.add_argument("--browser", type=str, default="chrome", choices=["chrome", "edge", "firefox"],
+                        help="Specify the browser to use (default: chrome)")
     args = parser.parse_args()
 
     # Attach a console if debug mode is enabled
@@ -269,7 +271,7 @@ def main():
         print("DEBUG enabled: Console attached.")
 
     # Initialize the WebDriver with the debug flag
-    init_driver(debug=args.debug)
+    init_driver(debug=args.debug, browser=args.browser)
 
     app = QApplication([])
 
