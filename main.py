@@ -7,7 +7,9 @@ import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from PyQt5.QtWidgets import QApplication
@@ -63,19 +65,44 @@ def logout():
         driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
 
 """Initialize the Selenium WebDriver"""
-def init_driver(debug=False):
+def init_driver(debug=False, browser="chrome"):
     global driver
-    chrome_options = Options()
-    chrome_options.add_argument("--no-sandbox")  # Fix for crashing issues
-    chrome_options.add_argument("--disable-dev-shm-usage")  # Fix for shared memory issues
-    chrome_options.add_argument("--disable-gpu")  # Optional: Disable GPU acceleration
+    browser = browser.lower()
+    print(f"Initializing WebDriver for: {browser.capitalize()}")
 
-    if not debug:
-        chrome_options.add_argument("--headless")  # Optional: Run in headless mode
+    if browser == "chrome":
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        if not debug:
+            chrome_options.add_argument("--headless")
+        else:
+            print("DEBUG enabled: Chrome window will be visible.")
+        driver = webdriver.Chrome(options=chrome_options)
+
+    elif browser == "edge":
+        edge_options = EdgeOptions()
+        edge_options.add_argument("--no-sandbox")
+        edge_options.add_argument("--disable-dev-shm-usage")
+        edge_options.add_argument("--disable-gpu")
+        if not debug:
+            edge_options.add_argument("--headless")
+        else:
+            print("DEBUG enabled: Edge window will be visible.")
+        driver = webdriver.Edge(options=edge_options)
+
+    elif browser == "firefox":
+        firefox_options = FirefoxOptions()
+        if not debug:
+            firefox_options.add_argument("--headless")
+        else:
+            print("DEBUG enabled: Firefox window will be visible.")
+        driver = webdriver.Firefox(options=firefox_options)
+
     else:
-        print("DEBUG enabled: Chrome window will be visible.")
+        raise ValueError("Unsupported browser. Use 'chrome', 'edge', or 'firefox'.")
 
-    driver = webdriver.Chrome(options=chrome_options)
     driver.get("https://web.whatsapp.com/")
     driver.set_window_size(520, 850)
     
