@@ -12,7 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from PyQt5.QtWidgets import QApplication
 from gui import LoginWindow, SettingsWindow  # Import GUI classes
-from shared import get_update_interval, settings_updated_event, get_current_source, source_changed_event
+from shared import get_update_interval, get_format_string, settings_updated_event, get_current_source, source_changed_event
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from configparser import ConfigParser
@@ -22,9 +22,45 @@ from configparser import ConfigParser
 driver = None
 biotext = ""
 update_interval = 1
-format_string = "Listening to [artist] - [title] | [bio]"
+format_string = get_format_string()
 sp = None
 config = ConfigParser()
+OLD_UI = False
+
+"""Element Definitions"""
+def define_element():
+    global profile_menu, biotext_element, bio_input, edit_button, done_button
+    if OLD_UI == False:
+        profile_menu = "/html/body/div[1]/div/div/div[3]/div/header/div/div[2]/div/div[2]/button"
+        biotext_element = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/div/span/span"
+        bio_input = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/div/div/div"
+        edit_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/span[2]/button"
+        done_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/span[2]/button"
+        print("Using new element definitions.")
+    else:
+        profile_menu = "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[2]/div[2]/button"
+        biotext_element = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/div/span/span"
+        bio_input = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/div[3]/div/div"
+        edit_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/span[2]/button"
+        # done_button not changed lmao
+        done_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/span[2]/button"
+        print("Using old element definitions.")
+    
+def logout():
+    if OLD_UI == False:
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div[1]/div/div[1]/button").click()
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[3]/header/header/div/span/div/div[2]/button").click()
+        time.sleep(0.1)
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[5]/div/ul/div/div[4]/li").click()
+        time.sleep(0.2)
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
+    else:
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[1]/div[1]/button").click()
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[3]/header/header/div/span/div/div[2]/button").click()
+        time.sleep(0.1)
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[6]/div/ul/div/li[4]/div").click()
+        time.sleep(0.2)
+        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
 
 """Initialize the Selenium WebDriver"""
 def init_driver(debug=False):
@@ -66,9 +102,9 @@ def get_bio_text():
     print("Getting bio text...")
     while True:
         try:
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div[2]/div/div[2]/button").click()
+            driver.find_element(By.XPATH, profile_menu).click()
             time.sleep(0.5)
-            biotext = driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/div/span/span").text
+            biotext = driver.find_element(By.XPATH, biotext_element).text
             print(f"Current bio: {biotext}")
             break
         except NoSuchElementException:
@@ -80,20 +116,14 @@ def restore_bio():
     print("\nRestoring bio...")
     if biotext:
         try:
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/span[2]/button").click()
+            driver.find_element(By.XPATH, edit_button).click()
             time.sleep(0.2)
-            bio_input = driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/div/div/div")
-            bio_input.send_keys(Keys.CONTROL + "a")
-            bio_input.send_keys(biotext)
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/span[2]/button").click()
+            driver.find_element(By.XPATH, bio_input).send_keys(Keys.CONTROL + "a")
+            driver.find_element(By.XPATH, bio_input).send_keys(biotext)
+            driver.find_element(By.XPATH, done_button).click()
             time.sleep(update_interval)
             print("\nLogging out of WhatsApp...")
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div[1]/div/div[1]/button").click()
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[3]/header/header/div/span/div/div[2]/button").click()
-            time.sleep(0.1)
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[5]/div/ul/div/div[4]/li").click()
-            time.sleep(0.2)
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
+            logout()
             while True:
                 try:
                     driver.find_element(By.CLASS_NAME, "_akaz")
@@ -155,7 +185,8 @@ def update_bio_loop():
             source_changed_event.wait(timeout=get_update_interval()/2)
             settings_updated_event.clear()
             source_changed_event.clear()
-
+    
+            format_string = get_format_string()
             source = get_current_source()
             if source == "local":
                 media = asyncio.run(get_media_info())
@@ -178,12 +209,11 @@ def update_bio_loop():
 
             unchanged_count = 0
             print(f"\nUpdating bio to: {new_bio}")
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/span[2]/button").click()
+            driver.find_element(By.XPATH, edit_button).click()
             time.sleep(0.2)
-            bio_input = driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/div/div/div")
-            bio_input.send_keys(Keys.CONTROL + 'a')
-            bio_input.send_keys(new_bio)
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/span[2]/button").click()
+            driver.find_element(By.XPATH, bio_input).send_keys(Keys.CONTROL + "a")
+            driver.find_element(By.XPATH, bio_input).send_keys(new_bio)
+            driver.find_element(By.XPATH, done_button).click()
 
             previous_bio = new_bio
         except NoSuchElementException:
@@ -221,13 +251,24 @@ def main():
 
     # Retain the SettingsWindow in memory
     def on_login_complete():
+        global OLD_UI
         try:
             print("Login complete. Closing LoginWindow and opening SettingsWindow.")
             login_window.close()  # Close the LoginWindow
             time.sleep(0.1)
-            print("Closing the new look dialog...")
-            driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button").click()  # Close the "new look" dialog
-            time.sleep(0.1)
+            try:
+                if driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[2]/div[2]/button"):
+                    print("Old UI detected.")
+                    OLD_UI = True
+            except NoSuchElementException:
+                print("New UI detected.")
+                OLD_UI = False
+            print("Defining elements based on the UI type...")
+            define_element()  # Define elements based on the UI type
+            time.sleep(1)
+            if OLD_UI == False:
+                print("Closing the new look dialog...")
+                driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button").click()  # Close the "new look" dialog
             get_bio_text()
             global settings_window  # Make settings_window global to retain it in memory
             settings_window = SettingsWindow(driver)  # Create the SettingsWindow
