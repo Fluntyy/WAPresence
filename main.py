@@ -177,7 +177,7 @@ def restore_bio():
         try:
             driver.find_element(By.XPATH, edit_button).click()
             time.sleep(0.2)
-            driver.find_element(By.XPATH, bio_input).clear()
+            driver.find_element(By.XPATH, bio_input).send_keys(Keys.CONTROL + "a")
             driver.find_element(By.XPATH, bio_input).send_keys(biotext)
             driver.find_element(By.XPATH, done_button).click()
             time.sleep(update_interval)
@@ -230,7 +230,7 @@ async def get_media_info_windows():
         }
 
         if current_session.get_playback_info().playback_status.name == "PAUSED":
-            info_dict['title'] = f"{info_dict.get('title', 'Unknown Title')} (Paused)"
+            info_dict['title'] = f"{info_dict.get('title', 'Unknown Title')} ⏸️"
         return info_dict
     return None
 
@@ -280,7 +280,7 @@ async def get_media_info_linux():
                 }
 
                 if playback_status == "Paused":
-                    info_dict['title'] = f"{info_dict['title']} (Paused)"
+                    info_dict['title'] = f"{info_dict['title']} ⏸️"
 
                 return info_dict
 
@@ -341,7 +341,7 @@ def update_bio_loop():
             print(f"\nUpdating bio to: {new_bio}")
             driver.find_element(By.XPATH, edit_button).click()
             time.sleep(0.2)
-            driver.find_element(By.XPATH, bio_input).clear()
+            driver.find_element(By.XPATH, bio_input).send_keys(Keys.CONTROL + "a")
             driver.find_element(By.XPATH, bio_input).send_keys(new_bio)
             driver.find_element(By.XPATH, done_button).click()
 
