@@ -32,7 +32,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException
 from PyQt5.QtWidgets import QApplication
 from gui import LoginWindow, SettingsWindow  # Import GUI classes
 from shared import get_update_interval, get_format_string, settings_updated_event, get_current_source, source_changed_event
@@ -177,7 +177,7 @@ def restore_bio():
         try:
             driver.find_element(By.XPATH, edit_button).click()
             time.sleep(0.2)
-            driver.find_element(By.XPATH, bio_input).send_keys(Keys.CONTROL + "a")
+            driver.find_element(By.XPATH, bio_input).clear()
             driver.find_element(By.XPATH, bio_input).send_keys(biotext)
             driver.find_element(By.XPATH, done_button).click()
             time.sleep(update_interval)
@@ -187,7 +187,7 @@ def restore_bio():
                 try:
                     driver.find_element(By.CLASS_NAME, "_akaz")
                     break
-                except NoSuchElementException:
+                except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
                     time.sleep(0.1)
         except Exception:
             pass
@@ -341,12 +341,12 @@ def update_bio_loop():
             print(f"\nUpdating bio to: {new_bio}")
             driver.find_element(By.XPATH, edit_button).click()
             time.sleep(0.2)
-            driver.find_element(By.XPATH, bio_input).send_keys(Keys.CONTROL + "a")
+            driver.find_element(By.XPATH, bio_input).clear()
             driver.find_element(By.XPATH, bio_input).send_keys(new_bio)
             driver.find_element(By.XPATH, done_button).click()
 
             previous_bio = new_bio
-        except NoSuchElementException:
+        except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
             print("Error updating bio. Retrying...")
             time.sleep(1)
         except Exception as e:
@@ -389,7 +389,7 @@ def main():
                 if driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[2]/div[2]/button"):
                     print("Old UI detected.")
                     OLD_UI = True
-            except NoSuchElementException:
+            except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
                 print("New UI detected.")
                 OLD_UI = False
             
@@ -401,7 +401,7 @@ def main():
                 try:
                     print("Closing the new look dialog if it exists...")
                     driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button").click()
-                except NoSuchElementException:
+                except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
                     print("New look dialog not found, continuing.")
             
             get_bio_text()
