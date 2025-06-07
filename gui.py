@@ -6,9 +6,10 @@ from configparser import ConfigParser
 from selenium.webdriver.common.by import By
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.uic import loadUi
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QMetaObject, Qt, pyqtSlot
 from PyQt5.QtWidgets import QDialog
 from shared import get_update_interval, get_format_string, set_update_interval, set_format_string, settings_updated_event, set_current_source, get_current_source
+from tray import TrayIcon
 
 config = ConfigParser()
 temp_dir = tempfile.gettempdir()
@@ -105,6 +106,9 @@ class SettingsWindow(QtWidgets.QMainWindow):
         loadUi("Settings.ui", self)
         self.setWindowTitle("WAPresence - Settings")
         self.driver = driver
+        self.tray = TrayIcon(settings_callback=self.show_settings, quit_callback=self.tray_exit)
+        self.tray.settings_callback = self.show_settings
+        self.tray.show()
         self.load_config()
         self.SaveButton.clicked.connect(self.save_settings)
         self.RestoreButton.clicked.connect(self.restore_defaults)
@@ -197,28 +201,50 @@ class SettingsWindow(QtWidgets.QMainWindow):
 
         QtWidgets.QMessageBox.information(self, "Defaults Restored", "Settings have been restored to defaults.")
         settings_updated_event.set()  # Signal the update_bio_loop to reload settings
-        
+
     def closeEvent(self, event):
-        """Handle the window close event"""
-        reply = QtWidgets.QMessageBox.question(
-            self,
-            "WAPresence",
-            "Are you sure you want to exit?",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No
-        )
+        """Put the application in the system tray instead of closing it."""
+        event.ignore()
+        self.hide()
+        self.tray.icon.notify("Application minimized to system tray.", "WAPresence")
+        
+    def show_settings(self):
+        """Show the settings window."""
+        print("Showing settings window...")
+        QMetaObject.invokeMethod(self, "execute_gui_operations", Qt.QueuedConnection)
+        
+    def tray_exit(self):
+        """Handle the exit action from the tray icon."""
+        print("Tray icon exit triggered.")
+        QMetaObject.invokeMethod(self, "exit_application", Qt.QueuedConnection)
 
-        if reply == QtWidgets.QMessageBox.Yes:
-            self.exit_application()
-            event.accept()
-        else:
-            event.ignore()
+    @pyqtSlot()
+    def execute_gui_operations(self):
+        """Perform GUI operations."""
+        print("Executing GUI operations...")
+        try:
+            self.show()
+            self.raise_()
+            self.activateWindow()
+            self.repaint()
+            print("Window showed successfully.")
+        except Exception as e:
+            print(f"Error during GUI operations: {e}")
 
+    @pyqtSlot()
     def exit_application(self):
-        """Exit the application and restore the original bio"""
+        """Exit the application and restore the original bio."""
         print("Exiting application...")
-        os.remove(qr_path)
-        self.restore_bio_signal.emit()
-        self.driver.quit()
-        os._exit(0)
-        QtWidgets.QApplication.quit()
+        try:
+            os.remove(qr_path)
+            print("QR code file removed.")
+            self.restore_bio_signal.emit()
+            print("Restore bio signal emitted.")
+            self.driver.quit()
+            print("Selenium driver quit successfully.")
+            QtWidgets.QApplication.quit()
+            print("Application quit successfully.")
+        except Exception as e:
+            print(f"Error during cleanup operations: {e}")
+        finally:
+            os._exit(0)
