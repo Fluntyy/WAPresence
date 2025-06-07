@@ -1,4 +1,7 @@
 selenium
-winsdk
 PyQt5
 spotipy
+configparser
+
+winsdk; sys_platform == 'win32'
+dbus-next; sys_platform == 'linux'
