@@ -153,7 +153,7 @@ def init_spotify_client():
         print("Spotify API credentials are missing!")
         return
 
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri, scope=SCOPE))
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri, scope=SCOPE, cache_path=".cache"))
 
 """Get the current bio text"""
 def get_bio_text():
