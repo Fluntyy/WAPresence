@@ -3,7 +3,9 @@ import asyncio
 import threading
 import argparse
 import sys
-import platform  # Import platform module for OS detection
+import requests
+import platform
+from uvicorn import Config, Server
 
 # --- Platform-specific imports ---
 IS_WINDOWS = platform.system() == "Windows"
@@ -35,55 +37,54 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException
 from PyQt5.QtWidgets import QApplication
 from gui import LoginWindow, SettingsWindow  # Import GUI classes
-from shared import get_update_interval, get_format_string, settings_updated_event, get_current_source, source_changed_event
+from shared import get_update_interval, get_format_string, set_format_string, settings_updated_event, get_current_source, source_changed_event
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from configparser import ConfigParser
 
 # Global Variables
-driver = None
+driver: 'webdriver.Remote | None' = None
 biotext = ""
 update_interval = 1
 format_string = get_format_string()
-sp = None
+sp: 'spotipy.Spotify | None' = None
 config = ConfigParser()
-OLD_UI = False
 user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+run_once = False
+message = ""
 
 """Element Definitions"""
 def define_element():
     global profile_menu, biotext_element, bio_input, edit_button, done_button
-    if OLD_UI == False:
+    try:
+        # fetch from my website so if whatsapp changes its ui, I can update it without needing to update the app
+        response = requests.get("https://api.flunty.xyz/wapresence")
+        response.raise_for_status()  # Raise an error for HTTP issues
+        data = response.json()  # Parse the JSON response
+        elements = data.get("data", {})
+
+        profile_menu = elements.get("profile_menu", "/html/body/div[1]/button")
+        biotext_element = elements.get("biotext_element", "/html/body/div[5]/span[1]")
+        bio_input = elements.get("bio_input", "/html/body/div[5]/div/div/div")
+        edit_button = elements.get("edit_button", "/html/body/div[5]/button")
+        done_button = elements.get("done_button", "/html/body/div[5]/span[3]/button")
+
+        print("Element definitions fetched successfully.")
+    except requests.RequestException as e:
         profile_menu = "/html/body/div[1]/div/div/div[3]/div/header/div/div[2]/div/div[2]/button"
         biotext_element = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/div/span/span"
         bio_input = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/div/div/div"
         edit_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/span[2]/button"
         done_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/span[2]/button"
-        print("Using new element definitions.")
-    else:
-        profile_menu = "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[2]/div[2]/button"
-        biotext_element = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/div/span/span"
-        bio_input = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/div[3]/div/div"
-        edit_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div/span[2]/button"
-        done_button = "/html/body/div[1]/div/div/div[3]/div/div[2]/div[1]/span/div/div/span/div/div/div[4]/div[2]/div[1]/span[2]/button"
-        print("Using old element definitions.")
 
 """Logout mechanism"""
 def logout():
-    if OLD_UI == False:
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div[1]/div/div[1]/button").click()
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[3]/header/header/div/span/div/div[2]/button").click()
-        time.sleep(0.1)
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[5]/div/ul/div/div[4]/li").click()
-        time.sleep(0.2)
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
-    else:
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[1]/div[1]/button").click()
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[3]/header/header/div/span/div/div[2]/button").click()
-        time.sleep(0.1)
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[6]/div/ul/div/li[4]/div").click()
-        time.sleep(0.2)
-        driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
+    driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div[1]/div/div[1]/button").click()
+    driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/div[3]/header/header/div/span/div/div[2]/button").click()
+    time.sleep(0.1)
+    driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[5]/div/ul/div/div[4]/li").click()
+    time.sleep(0.2)
+    driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button[2]").click()
 
 """Initialize the Selenium WebDriver"""
 def init_driver(debug=False, browser="chrome"):
@@ -113,10 +114,10 @@ def init_driver(debug=False, browser="chrome"):
         if IS_LINUX:
             edge_options.add_argument("--no-sandbox")
             if not debug:
-                chrome_options.add_argument(f'user-agent={user_agent}')
-                chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-                chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-                chrome_options.add_experimental_option('useAutomationExtension', False)
+                edge_options.add_argument(f'user-agent={user_agent}')
+                edge_options.add_argument("--disable-blink-features=AutomationControlled")
+                edge_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+                edge_options.add_experimental_option('useAutomationExtension', False)
         edge_options.add_argument("--disable-dev-shm-usage")
         edge_options.add_argument("--disable-gpu")
         if not debug:
@@ -136,7 +137,7 @@ def init_driver(debug=False, browser="chrome"):
     else:
         raise ValueError("Unsupported browser. Use 'chrome', 'edge', or 'firefox'.")
 
-    driver.get("https://web.whatsapp.com/")
+    driver.get("http://localhost:8000")
     driver.set_window_size(520, 850)
 
 """Initialize the Spotify client"""
@@ -208,7 +209,7 @@ def get_spotify_media_info():
     is_playing = current_track['is_playing']
 
     if not is_playing:
-        title += " (Paused)"
+        title += " ⏸️"
 
     return {
         'title': title,
@@ -289,6 +290,49 @@ async def get_media_info_linux():
     except Exception as e:
         print(f"Could not get media info from DBus: {e}")
         return None
+    
+def start_plugin_server():
+    config = Config("plugin_server:app", host="127.0.0.1", port=6969, access_log=False)
+    server = Server(config)
+    server.run()
+    
+def get_plugin_info():
+    try:
+        response = requests.get("http://localhost:6969/current", timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+
+            activity = data.get("activity", {})
+            default_format = data.get("default_format", "")
+
+            # Compose the formatted text by replacing placeholders
+            formatted = default_format
+            for key, value in activity.items():
+                placeholder = "{" + key + "}"
+                formatted = formatted.replace(placeholder, str(value))
+
+            # Also allow {app} placeholder in format
+            formatted = formatted.replace("{app}", data.get("app", "Unknown App"))
+
+            # Return all keys dynamically
+            result = {
+                "default_format": data.get("default_format", ""),
+                "app": data.get("app", ""),
+                "type": data.get("type", "")
+            }
+            # Add each key-value pair from activity
+            for k, v in activity.items():
+                result[k] = v
+
+            return result
+
+        else:
+            print(f"⚠️ Failed to get plugin info. Status code: {response.status_code}")
+            return None
+
+    except Exception as e:
+        print(f"⚠️ Error while fetching plugin info: {e}")
+        return None
 
 async def get_media_info_unsupported():
     """Fallback for unsupported operating systems."""
@@ -306,15 +350,17 @@ else:
 
 """Background loop to update the WhatsApp bio."""
 def update_bio_loop():
+    global SettingsWindow, run_once
     previous_bio = None
     unchanged_count = 0
+    run_once = False
     while True:
         try:
             settings_updated_event.wait(timeout=get_update_interval()/2)
             source_changed_event.wait(timeout=get_update_interval()/2)
             settings_updated_event.clear()
             source_changed_event.clear()
-        
+            last_default_format = None
             format_string = get_format_string()
             source = get_current_source()
             media = None
@@ -322,13 +368,36 @@ def update_bio_loop():
                 media = asyncio.run(get_local_media_info())
             elif source == "spotify":
                 media = get_spotify_media_info()
+            elif source == "plugin":
+                media = get_plugin_info()
 
             if media:
-                new_bio = format_string.replace("[artist]", media.get('artist', 'Unknown Artist')) \
-                                       .replace("[title]", media.get('title', 'Unknown Title')) \
-                                       .replace("[album]", media.get('album', 'Unknown Album')) \
-                                       .replace("[tracknum]", str(media.get('track_number', ''))) \
-                                       .replace("[bio]", biotext)
+                if source == "plugin":
+                    default_format = media.get('default_format', format_string)
+                    if default_format != last_default_format:
+                        format_string = f"{default_format} | [bio]" if default_format else format_string
+                        set_format_string(format_string)
+                        last_default_format = default_format
+                    if not run_once:
+                        print(f"Format string: {format_string}")
+                        settings_window.update_format_signal.emit()
+                        run_once = True
+                    activity = {k: v for k, v in media.items() if k not in ['default_format', 'app', 'type']}
+                    if activity:
+                        new_bio = format_string
+                        for key, value in activity.items():
+                            new_bio = new_bio.replace(f"[{key}]", value)
+                        
+                        new_bio = new_bio.replace("[bio]", biotext)
+                    else:
+                        new_bio = biotext
+                    
+                else:
+                    new_bio = format_string.replace("[artist]", media.get('artist', 'Unknown Artist')) \
+                                        .replace("[title]", media.get('title', 'Unknown Title')) \
+                                        .replace("[album]", media.get('album', 'Unknown Album')) \
+                                        .replace("[tracknum]", str(media.get('track_number', ''))) \
+                                        .replace("[bio]", biotext)
             else:
                 new_bio = biotext
                 
@@ -374,35 +443,24 @@ def main():
     if args.debug:
         attach_console()
         print("DEBUG enabled: Console attached.")
-
+    
     init_driver(debug=args.debug, browser=args.browser)
     app = QApplication([])
     login_window = LoginWindow(driver)
     
     def on_login_complete():
-        global OLD_UI
         try:
             print("Login complete. Closing LoginWindow and opening SettingsWindow.")
             login_window.close()
             time.sleep(0.1)
-            try:
-                if driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div[3]/div/header/div/div/div/div/span/div/div[2]/div[2]/button"):
-                    print("Old UI detected.")
-                    OLD_UI = True
-            except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
-                print("New UI detected.")
-                OLD_UI = False
-            
             print("Defining elements based on the UI type...")
             define_element()
             time.sleep(1)
-            
-            if not OLD_UI:
-                try:
-                    print("Closing the new look dialog if it exists...")
-                    driver.find_element(By.XPATH, "/html/body/div[1]/div/div/span[2]/div/div/div/div/div/div/div[2]/div/button").click()
-                except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
-                    print("New look dialog not found, continuing.")
+            try:
+                print("Closing the new look dialog if it exists...")
+                driver.find_element(By.XPATH, "/html/body/div[1]/div/div[1]/span[2]/div/div/div/div/div/div/div[2]/div/button").click()
+            except (NoSuchElementException, StaleElementReferenceException, ElementNotInteractableException):
+                print("New look dialog not found, continuing.")
             
             get_bio_text()
             
@@ -428,4 +486,7 @@ def main():
         driver.quit()
 
 if __name__ == "__main__":
+    plugin_thread = threading.Thread(target=start_plugin_server, daemon=True)
+    plugin_thread.start()
+    print("Started plugin server in a background thread.")
     main()

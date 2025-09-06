@@ -100,6 +100,7 @@ class SpotifyAPISetupDialog(QDialog):
 class SettingsWindow(QtWidgets.QMainWindow):
     """Settings Window to control the application"""
     restore_bio_signal = pyqtSignal()
+    update_format_signal = pyqtSignal()
 
     def __init__(self, driver):
         super(SettingsWindow, self).__init__()
@@ -115,16 +116,22 @@ class SettingsWindow(QtWidgets.QMainWindow):
         self.ExitButton.clicked.connect(self.exit_application)
         self.LocalRadio.toggled.connect(self.handle_radio_selection)
         self.SpotifyRadio.toggled.connect(self.handle_radio_selection)
+        self.update_format_signal.connect(self.update_format)
+
+    def update_format(self):
+        self.FormatTextBox.setText(get_format_string())
+        print(f"\nFormat updated to: {get_format_string()}")
 
     def handle_radio_selection(self):
         """Handle the selection of Local Media or Spotify."""
         if self.SpotifyRadio.isChecked():
+            current = get_current_source()
             if not config.has_section("Spotify") or not config.get("Spotify", "ClientID", fallback="") or not config.get("Spotify", "ClientSecret", fallback=""):
                 # Open Spotify API setup dialog
                 dialog = SpotifyAPISetupDialog()
                 if dialog.exec_() == QDialog.Rejected:
-                    self.LocalRadio.setChecked(True)
-                    set_current_source("local")
+                    getattr(self, f"{current.capitalize()}Radio", None).setChecked(True)
+                    set_current_source(current)
                 else:
                     config.set("Configuration", "Source", "Spotify")
                     set_current_source("spotify")
@@ -134,6 +141,9 @@ class SettingsWindow(QtWidgets.QMainWindow):
         elif self.LocalRadio.isChecked():
             set_current_source("local")
             config.set("Configuration", "Source", "Local")
+        elif self.PluginRadio.isChecked():
+            set_current_source("plugin")
+            config.set("Configuration", "Source", "Plugin")
         with open("config.ini", "w") as config_file:
             config.write(config_file)
 

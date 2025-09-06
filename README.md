@@ -35,11 +35,9 @@ First, **you need to** [**download Python**](https://www.python.org/downloads/) 
 
 Once linked, if there's media playing, **your WhatsApp bio will automatically update** within 1-2 seconds.
 
-Of course. Here is the updated `README.md` section with the link to your guide.
-
 ## Media Source Definitions
 
-WAPresence can pull media information from two types of sources: **Local** and **Spotify**.
+WAPresence can pull media information from three types of sources: **Local**, **Spotify**, and **Plugins**.
 
 ### Local
 
@@ -55,3 +53,36 @@ The "Spotify" source option connects directly to your Spotify account using the 
   * **Authentication:** You will be asked to authorize the application with your Spotify account. To do this, you first need to configure your own credentials.
   * **Setup:** For instructions on how to get your credentials, please follow the [**Guide to Creating a Spotify Developer Application**](Spotify_Guide.md).
   * **Cross-Device Functionality:** Because it uses the API, it can detect and display what you're listening to on **any device** logged into your Spotify account, including your phone, smart speaker, or computer.
+
+### Plugins
+
+The "Plugin" source option allows **third-party modules** to feed activity or media data into WAPresence.  
+Plugins provide maximum flexibility by letting you define custom activities beyond local or Spotify playback (e.g., VS Code file editing, Minecraft server info, or even another music player).
+
+A plugin communicates with WAPresence by sending a JSON-like payload with the following fields:
+
+```json
+{
+  "app": "Spotify",
+  "type": "media",
+  "default_format": "{artist} - {title}",
+  "activity": {
+    "artist": "Rick Astley",
+    "title": "Never Gonna Give You Up",
+    "album": "Whenever You Need Somebody",
+    "track_number": 1,
+    "status": "playing"
+  }
+}
+```
+
+-   **app** → The name of the application or source (e.g., `"Spotify"`, `"VS Code"`, `"Minecraft"`).
+
+-   **type** → The category of activity (e.g., `"media"`, `"app"`, `"game"`).
+    
+-   **default_format** → A string template showing how the activity should be displayed, with placeholders referencing keys in `activity`.
+    
+-   **activity** → A dictionary of dynamic values describing the current state (e.g., track info, file path, server IP, status).
+
+If you want to create your own plugin, check out the [**Plugin Creation Guide**](Plugin_Guide.md).
+For examples, see the [`/plugins`](https://github.com/WAPresence/tree/main/plugins) folder in this repository.
