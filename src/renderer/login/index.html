@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self' data:; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline';">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WAPresence - Log in</title>
+	<link rel="stylesheet" href="../index.css">
+	<script src="../md3.bundle.js"></script>
+	<style>
+		body {
+			background: var(--md-sys-color-surface, #121413);
+			color: var(--md-sys-color-on-surface, #e1e3e1);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			padding: 24px 20px;
+			text-align: center;
+			box-sizing: border-box;
+		}
+
+		.title-container {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			margin-bottom: 6px;
+		}
+
+		h1 {
+			font-size: 1.25rem;
+			font-weight: 700;
+			letter-spacing: -0.2px;
+			color: var(--md-sys-color-primary, #059669);
+		}
+
+		p.instructions {
+			font-size: 0.82rem;
+			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
+			margin-bottom: 20px;
+			line-height: 1.4;
+			max-width: 300px;
+		}
+
+		.qr-card {
+			width: 250px;
+			height: 250px;
+			background: var(--md-sys-color-surface-container, #202423);
+			border: 1px solid var(--md-sys-color-outline-variant, #404744);
+			border-radius: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			overflow: hidden;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+		}
+
+		#qr-image {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			display: none;
+			padding: 10px;
+			background: white;
+		}
+
+		.loading-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 14px;
+			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
+			font-size: 0.85rem;
+		}
+
+		.status-footer {
+			margin-top: 18px;
+			font-size: 0.78rem;
+			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+	</style>
+</head>
+<body>
+	<div class="title-container">
+		<img src="../assets/icon.png" alt="WAPresence" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px;">
+		<h1>Log in to WhatsApp</h1>
+	</div>
+	<p class="instructions">Open WhatsApp on your phone &gt; Linked Devices &gt; Link a Device, and scan the QR code.</p>
+
+	<div class="qr-card">
+		<div id="loading" class="loading-container">
+			<md-circular-progress indeterminate></md-circular-progress>
+			<span>Waiting for WhatsApp QR...</span>
+		</div>
+		<img id="qr-image" alt="WhatsApp Login QR Code">
+	</div>
+
+	<div class="status-footer">
+		<span class="material-symbols-rounded" style="font-size: 16px;">lock</span>
+		<span id="status-text">End-to-end encrypted session</span>
+	</div>
+
+	<script>
+		if (window.applyMaterialTheme) {
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+			window.applyMaterialTheme('#00a884', prefersDark)
+		}
+
+		const loadingEl = document.getElementById('loading')
+		const qrImageEl = document.getElementById('qr-image')
+		const statusText = document.getElementById('status-text')
+
+		function renderQr(dataUrl) {
+			if (!dataUrl) return
+			qrImageEl.src = dataUrl
+			qrImageEl.style.display = 'block'
+			loadingEl.style.display = 'none'
+			statusText.textContent = 'Scan code with WhatsApp'
+		}
+
+		if (window.api) {
+			window.api.onQrCode((dataUrl) => {
+				renderQr(dataUrl)
+			})
+
+			window.api.onConnectionStatus((status) => {
+				if (status === 'connecting') {
+					statusText.textContent = 'Connecting to WhatsApp servers...'
+				} else if (status === 'connected') {
+					statusText.textContent = 'Connected! Opening settings...'
+				} else if (status === 'qr') {
+					statusText.textContent = 'Scan code with WhatsApp'
+				}
+			})
+
+			window.api.getQrCode().then((lastQr) => {
+				if (lastQr) {
+					renderQr(lastQr)
+				}
+			}).catch(() => {})
+		}
+	</script>
+</body>
+</html>

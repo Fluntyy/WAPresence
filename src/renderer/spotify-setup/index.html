@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WAPresence - Spotify API Setup</title>
+	<link rel="stylesheet" href="../index.css">
+	<script src="../md3.bundle.js"></script>
+	<style>
+		body {
+			background: var(--md-sys-color-surface, #121413);
+			color: var(--md-sys-color-on-surface, #e1e3e1);
+			padding: 20px;
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+			box-sizing: border-box;
+		}
+
+		.title-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			color: #1db954;
+		}
+
+		h2 {
+			font-size: 16px;
+			font-weight: 700;
+			letter-spacing: -0.2px;
+			color: #1db954;
+		}
+
+		.form-group {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.actions-row {
+			display: flex;
+			justify-content: flex-end;
+			gap: 10px;
+			margin-top: auto;
+			padding-top: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div class="title-row">
+		<span class="material-symbols-rounded fill" style="font-size: 24px;">music_note</span>
+		<h2>Spotify API Setup</h2>
+	</div>
+
+	<div class="form-group">
+		<md-outlined-text-field
+			id="client-id"
+			label="Spotify Client ID"
+			placeholder="Paste your 32-character Client ID from Spotify Developer Dashboard"
+			style="width: 100%;">
+		</md-outlined-text-field>
+
+		<div style="display: flex; gap: 8px; align-items: center;">
+			<md-outlined-text-field
+				id="redirect-uri"
+				label="Redirect URI"
+				value="http://127.0.0.1:6969/callback"
+				disabled
+				style="flex: 1;">
+			</md-outlined-text-field>
+			<md-outlined-button id="btn-edit" style="height: 56px;">
+				<span class="material-symbols-rounded" slot="icon">edit</span>
+				Edit
+			</md-outlined-button>
+		</div>
+	</div>
+
+	<div class="actions-row">
+		<md-text-button id="btn-cancel">Cancel</md-text-button>
+		<md-filled-button id="btn-ok" style="background: #1db954; --md-filled-button-label-text-color: #000000;">
+			<span class="material-symbols-rounded" slot="icon">check</span>
+			Authorize & Connect
+		</md-filled-button>
+	</div>
+
+	<script>
+		if (window.applyMaterialTheme) {
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+			window.applyMaterialTheme('#1db954', prefersDark)
+		}
+
+		const clientIdInput = document.getElementById('client-id')
+		const redirectUriInput = document.getElementById('redirect-uri')
+		const btnEdit = document.getElementById('btn-edit')
+		const btnCancel = document.getElementById('btn-cancel')
+		const btnOk = document.getElementById('btn-ok')
+
+		let isEditingRedirect = false
+
+		btnEdit.addEventListener('click', () => {
+			isEditingRedirect = !isEditingRedirect
+			redirectUriInput.disabled = !isEditingRedirect
+			btnEdit.textContent = isEditingRedirect ? 'Lock' : 'Edit'
+		})
+
+		btnCancel.addEventListener('click', async () => {
+			if (window.api) {
+				await window.api.closeSpotifySetup(false)
+			}
+		})
+
+		btnOk.addEventListener('click', async () => {
+			const clientID = (clientIdInput.value || '').trim()
+			const redirectURI = (redirectUriInput.value || '').trim() || 'http://127.0.0.1:6969/callback'
+
+			if (!clientID) {
+				alert('Please enter your Spotify Client ID.')
+				return
+			}
+
+			if (window.api) {
+				await window.api.closeSpotifySetup(true, clientID, redirectURI)
+			}
+		})
+
+		if (window.api) {
+			window.api.getConfig().then((cfg) => {
+				if (cfg.clientID) clientIdInput.value = cfg.clientID
+				if (cfg.redirectURI) redirectUriInput.value = cfg.redirectURI
+			}).catch(() => {})
+		}
+	</script>
+</body>
+</html>

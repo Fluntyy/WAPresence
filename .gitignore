@@ -1,0 +1,33 @@
+# Binaries
+bin/
+dist/
+release/
+node_modules/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+
+# App data & configs
+config.ini
+baileys_auth/
+*.db
+*.db-journal
+*.log
+.cache
+spotify_token.json
+
+# Generated renderer bundles
+src/renderer/assets/fonts/
+src/renderer/md3.bundle.js
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

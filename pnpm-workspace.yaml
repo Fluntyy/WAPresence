@@ -1,0 +1,6 @@
+allowBuilds:
+  baileys@file:../Baileys: true
+  electron-winstaller: true
+  esbuild: true
+  protobufjs: true
+  usocket: true

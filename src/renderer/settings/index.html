@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self' data:; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WAPresence</title>
+	<link rel="stylesheet" href="../index.css">
+	<script src="../md3.bundle.js"></script>
+	<style>
+		body {
+			padding: 16px 20px;
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			min-height: 100vh;
+			background: var(--md-sys-color-surface);
+			color: var(--md-sys-color-on-surface);
+			box-sizing: border-box;
+		}
+
+		.app-bar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			border-bottom: 1px solid var(--md-sys-color-outline-variant);
+			padding-bottom: 12px;
+		}
+
+		.app-title-group {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.app-title {
+			font-size: 20px;
+			font-weight: 700;
+			letter-spacing: -0.2px;
+			color: var(--md-sys-color-on-surface);
+		}
+
+		.app-bar-actions {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.md3-card {
+			background: var(--md-sys-color-surface-container);
+			border: 1px solid var(--md-sys-color-outline-variant);
+			border-radius: 16px;
+			padding: 16px;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.card-header-title {
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--md-sys-color-primary);
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.row-flex {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+
+		.source-segmented {
+			display: inline-flex;
+			background: var(--md-sys-color-surface-container-high);
+			border-radius: 24px;
+			padding: 3px;
+			gap: 4px;
+			border: 1px solid var(--md-sys-color-outline-variant);
+		}
+
+		.source-btn {
+			padding: 6px 14px;
+			border-radius: 20px;
+			border: none;
+			background: transparent;
+			color: var(--md-sys-color-on-surface-variant);
+			font-size: 12px;
+			font-weight: 600;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			transition: background 0.15s, color 0.15s;
+		}
+
+		.source-btn.active {
+			background: var(--md-sys-color-primary);
+			color: var(--md-sys-color-on-primary);
+		}
+
+		.status-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			font-size: 13px;
+			padding: 2px 0;
+		}
+
+		.status-label {
+			color: var(--md-sys-color-on-surface-variant);
+			font-weight: 500;
+		}
+
+		.status-value {
+			color: var(--md-sys-color-on-surface);
+			font-weight: 600;
+			max-width: 290px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.char-counter {
+			font-size: 11px;
+			font-weight: 600;
+			padding: 2px 8px;
+			border-radius: 12px;
+			background: var(--md-sys-color-surface-container-highest);
+			color: var(--md-sys-color-primary);
+		}
+
+		.char-counter.warning {
+			color: var(--md-sys-color-error);
+		}
+
+		.banner {
+			display: none;
+			border-radius: 12px;
+			padding: 10px 14px;
+			font-size: 12px;
+			line-height: 1.4;
+		}
+
+		.banner-error {
+			background: color-mix(in srgb, var(--md-sys-color-error) 15%, transparent);
+			border: 1px solid var(--md-sys-color-error);
+			color: #fca5a5;
+		}
+
+		.banner-success {
+			background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+			border: 1px solid var(--md-sys-color-primary);
+			color: #a7f3d0;
+		}
+
+		.pref-list {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+			padding: 4px 0;
+			overflow-x: hidden;
+		}
+
+		.pref-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		.pref-info-group {
+			flex: 1;
+			min-width: 0;
+		}
+
+		.pref-info-title {
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--md-sys-color-on-surface);
+			word-break: break-word;
+		}
+
+		.pref-info-desc {
+			font-size: 12px;
+			color: var(--md-sys-color-on-surface-variant);
+			line-height: 1.35;
+			word-break: break-word;
+		}
+
+		select.md3-select {
+			background: var(--md-sys-color-surface-container-high);
+			color: var(--md-sys-color-on-surface);
+			border: 1px solid var(--md-sys-color-outline);
+			border-radius: 8px;
+			padding: 6px 10px;
+			font-size: 13px;
+			outline: none;
+		}
+
+		.footer-row {
+			display: flex;
+			justify-content: space-between;
+			margin-top: auto;
+			padding-top: 10px;
+			border-top: 1px solid var(--md-sys-color-outline-variant);
+		}
+
+		.app-logo {
+			width: 28px;
+			height: 28px;
+			object-fit: contain;
+			border-radius: 6px;
+		}
+	</style>
+</head>
+<body>
+	<!-- App Bar -->
+	<header class="app-bar">
+		<div class="app-title-group">
+			<img src="../assets/icon.png" alt="WAPresence" class="app-logo">
+			<span class="app-title">WAPresence</span>
+		</div>
+		<div class="app-bar-actions">
+			<md-text-button id="btn-preferences">
+				<span class="material-symbols-rounded" slot="icon">settings</span>
+				Preferences
+			</md-text-button>
+			<md-text-button id="btn-exit" style="--md-sys-color-primary: #ef4444;">
+				<span class="material-symbols-rounded" slot="icon">close</span>
+				Exit
+			</md-text-button>
+			<md-filled-button id="btn-save">
+				<span class="material-symbols-rounded" slot="icon">save</span>
+				Save & Update
+			</md-filled-button>
+		</div>
+	</header>
+
+	<!-- Main Settings Card -->
+	<section class="md3-card">
+		<div class="row-flex">
+			<div style="display: flex; align-items: center; gap: 8px;">
+				<md-outlined-text-field
+					id="update-every"
+					type="number"
+					label="Update Every"
+					suffix-text="sec"
+					min="1"
+					max="60"
+					value="1"
+					style="width: 140px;">
+				</md-outlined-text-field>
+			</div>
+
+			<!-- Source Segmented Control -->
+			<div class="source-segmented">
+				<button type="button" class="source-btn active" id="src-local" data-source="Local">
+					<span class="material-symbols-rounded">computer</span>
+					Local Media
+				</button>
+				<button type="button" class="source-btn" id="src-spotify" data-source="Spotify">
+					<span class="material-symbols-rounded">queue_music</span>
+					Spotify
+				</button>
+				<button type="button" class="source-btn" id="src-plugin" data-source="Plugin">
+					<span class="material-symbols-rounded">extension</span>
+					Plugin
+				</button>
+			</div>
+		</div>
+
+		<!-- Format text field -->
+		<div style="display: flex; flex-direction: column; gap: 6px;">
+			<div style="display: flex; justify-content: space-between; align-items: center;">
+				<span class="card-header-title">
+					<span class="material-symbols-rounded">edit_note</span>
+					Bio Format Text
+				</span>
+				<span id="char-counter" class="char-counter">0/50</span>
+			</div>
+			<md-outlined-text-field
+				id="format-text"
+				placeholder="Listening to [artist] - [title] | [bio]"
+				style="width: 100%;">
+			</md-outlined-text-field>
+		</div>
+
+		<!-- Dynamic Placeholders Chips -->
+		<div style="display: flex; flex-direction: column; gap: 4px;">
+			<span style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);">Click placeholder to insert:</span>
+			<md-chip-set id="chip-set">
+				<md-assist-chip id="chip-artist" label="[artist]"></md-assist-chip>
+				<md-assist-chip id="chip-title" label="[title]"></md-assist-chip>
+				<md-assist-chip id="chip-album" label="[album]"></md-assist-chip>
+				<md-assist-chip id="chip-tracknum" label="[tracknum]"></md-assist-chip>
+				<md-assist-chip id="chip-bio" label="[bio]"></md-assist-chip>
+			</md-chip-set>
+		</div>
+	</section>
+
+	<!-- Alert Banners -->
+	<div id="warning-banner" class="banner banner-error"></div>
+	<div id="success-banner" class="banner banner-success"></div>
+
+	<!-- Live Status Card -->
+	<section class="md3-card">
+		<div class="card-header-title">
+			<span class="material-symbols-rounded">vital_signs</span>
+			Live Status & WhatsApp Verification
+		</div>
+
+		<div class="status-item">
+			<span class="status-label">Media Source:</span>
+			<span id="source-val" class="status-value">Local Media</span>
+		</div>
+		<div class="status-item">
+			<span class="status-label">Now Playing:</span>
+			<span id="now-playing-val" class="status-value">None</span>
+		</div>
+		<div class="status-item">
+			<span class="status-label">WhatsApp Client:</span>
+			<span id="wa-status-val" class="status-value">Checking...</span>
+		</div>
+		<div class="status-item">
+			<span class="status-label">Server Verified Bio:</span>
+			<span id="server-about-val" class="status-value font-mono-code">None</span>
+		</div>
+
+		<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
+			<md-outlined-button id="btn-verify-now">
+				<span class="material-symbols-rounded" slot="icon">verified</span>
+				Verify now
+			</md-outlined-button>
+			<span id="verify-result-text" style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);"></span>
+		</div>
+	</section>
+
+	<!-- Footer Actions -->
+	<footer class="footer-row">
+		<md-text-button id="btn-reset">
+			<span class="material-symbols-rounded" slot="icon">restart_alt</span>
+			Reset to Default
+		</md-text-button>
+		<md-text-button id="btn-logout" style="--md-sys-color-primary: #ef4444;">
+			<span class="material-symbols-rounded" slot="icon">logout</span>
+			Log out WhatsApp
+		</md-text-button>
+	</footer>
+
+	<!-- Preferences & Updates Dialog -->
+	<md-dialog id="pref-dialog">
+		<div slot="headline" style="display: flex; align-items: center; gap: 8px;">
+			<span class="material-symbols-rounded">settings</span>
+			Preferences & Updates
+		</div>
+		<div slot="content" class="pref-list">
+			<!-- Start with OS -->
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Start with OS</div>
+					<div class="pref-info-desc">Launch WAPresence automatically when you start your computer.</div>
+				</div>
+				<md-switch id="pref-start-os"></md-switch>
+			</div>
+
+			<!-- Theme -->
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Theme</div>
+					<div class="pref-info-desc">Material Design 3 appearance scheme.</div>
+				</div>
+				<select id="pref-theme" class="md3-select">
+					<option value="System">System (Default)</option>
+					<option value="Dark">Dark</option>
+					<option value="Light">Light</option>
+				</select>
+			</div>
+
+			<!-- Pause Emoji -->
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Append ⏸️ Pause Emoji</div>
+					<div class="pref-info-desc">Appends ⏸️ to track title when media playback is paused.</div>
+				</div>
+				<md-switch id="pref-pause-emoji" selected></md-switch>
+			</div>
+
+			<!-- Plugin Port -->
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Plugin Webhook Port</div>
+					<div class="pref-info-desc">Local HTTP port for companion apps and browser extensions.</div>
+				</div>
+				<md-outlined-text-field id="pref-plugin-port" type="number" value="6970" style="width: 100px;"></md-outlined-text-field>
+			</div>
+
+			<hr style="border: none; border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;">
+
+			<!-- Auto-Updater -->
+			<div style="display: flex; flex-direction: column; gap: 8px;">
+				<div class="pref-info-title" style="display: flex; align-items: center; gap: 6px;">
+					<span class="material-symbols-rounded">update</span>
+					Application Updates
+				</div>
+				<div class="pref-info-desc" id="updater-status-desc">Version: v1.0.0 (Checking for updates...)</div>
+
+				<md-linear-progress id="updater-progress" style="display: none; width: 100%;"></md-linear-progress>
+
+				<div style="display: flex; gap: 8px; margin-top: 4px;">
+					<md-filled-button id="btn-check-update">
+						<span class="material-symbols-rounded" slot="icon">sync</span>
+						Check for Updates
+					</md-filled-button>
+					<md-filled-button id="btn-install-update" style="display: none; background: #059669;">
+						<span class="material-symbols-rounded" slot="icon">system_update_alt</span>
+						Restart & Install Update
+					</md-filled-button>
+				</div>
+			</div>
+		</div>
+		<div slot="actions">
+			<md-text-button id="btn-pref-close">Done</md-text-button>
+		</div>
+	</md-dialog>
+
+	<script>
+		// Material Theme initialization
+		const SEED_COLOR = '#00a884'
+
+		function updateTheme(themeStr) {
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+			const isDark = themeStr === 'Dark' || (themeStr === 'System' && prefersDark)
+			if (window.applyMaterialTheme) {
+				window.applyMaterialTheme(SEED_COLOR, isDark)
+			}
+		}
+
+		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+			if (currentConfig.theme === 'System') {
+				updateTheme('System')
+			}
+		})
+
+		// DOM references
+		const updateEveryInput = document.getElementById('update-every')
+		const formatTextInput = document.getElementById('format-text')
+		const charCounter = document.getElementById('char-counter')
+		const chipSet = document.getElementById('chip-set')
+		const warningBanner = document.getElementById('warning-banner')
+		const successBanner = document.getElementById('success-banner')
+		const sourceVal = document.getElementById('source-val')
+		const nowPlayingVal = document.getElementById('now-playing-val')
+		const waStatusVal = document.getElementById('wa-status-val')
+		const serverAboutVal = document.getElementById('server-about-val')
+		const verifyResultText = document.getElementById('verify-result-text')
+
+		// Source buttons
+		const srcLocal = document.getElementById('src-local')
+		const srcSpotify = document.getElementById('src-spotify')
+		const srcPlugin = document.getElementById('src-plugin')
+		let currentSource = 'Local'
+
+		// Preferences & Dialog
+		const prefDialog = document.getElementById('pref-dialog')
+		const btnPreferences = document.getElementById('btn-preferences')
+		const btnPrefClose = document.getElementById('btn-pref-close')
+		const prefStartOs = document.getElementById('pref-start-os')
+		const prefTheme = document.getElementById('pref-theme')
+		const prefPauseEmoji = document.getElementById('pref-pause-emoji')
+		const prefPluginPort = document.getElementById('pref-plugin-port')
+
+		// Updater
+		const updaterStatusDesc = document.getElementById('updater-status-desc')
+		const updaterProgress = document.getElementById('updater-progress')
+		const btnCheckUpdate = document.getElementById('btn-check-update')
+		const btnInstallUpdate = document.getElementById('btn-install-update')
+
+		let currentConfig = {
+			updateEvery: 1,
+			format: 'Listening to [artist] - [title] | [bio]',
+			source: 'Local',
+			clientID: '',
+			redirectURI: 'http://127.0.0.1:6969/callback',
+			startWithOS: false,
+			theme: 'System',
+			appendPauseEmoji: true,
+			pluginPort: 6970
+		}
+
+		function setSource(src) {
+			currentSource = src
+			srcLocal.classList.toggle('active', src === 'Local')
+			srcSpotify.classList.toggle('active', src === 'Spotify')
+			srcPlugin.classList.toggle('active', src === 'Plugin')
+			sourceVal.textContent = src === 'Plugin' ? `Plugin (Port ${prefPluginPort.value || 6970})` : (src === 'Spotify' ? 'Spotify' : 'Local Media')
+		}
+
+		srcLocal.addEventListener('click', () => setSource('Local'))
+		srcPlugin.addEventListener('click', () => setSource('Plugin'))
+		srcSpotify.addEventListener('click', async () => {
+			setSource('Spotify')
+			if (!currentConfig.clientID || currentConfig.clientID.trim().length === 0) {
+				const res = await window.api.openSpotifySetup()
+				if (!res || !res.confirmed) {
+					setSource('Local')
+				} else {
+					currentConfig.clientID = res.clientID
+					currentConfig.redirectURI = res.redirectURI
+				}
+			}
+		})
+
+		function updateCounter() {
+			const len = (formatTextInput.value || '').length
+			charCounter.textContent = `${len}/50`
+			if (len > 50) {
+				charCounter.className = 'char-counter warning'
+			} else {
+				charCounter.className = 'char-counter'
+			}
+		}
+
+		formatTextInput.addEventListener('input', updateCounter)
+
+		function insertPlaceholder(p) {
+			const input = formatTextInput
+			const cur = input.value || ''
+			input.value = cur ? `${cur} ${p}` : p
+			updateCounter()
+		}
+
+		function renderPlaceholders(list) {
+			chipSet.innerHTML = ''
+			list.forEach((p) => {
+				const chip = document.createElement('md-assist-chip')
+				chip.label = p
+				chip.addEventListener('click', () => insertPlaceholder(p))
+				chipSet.appendChild(chip)
+			})
+		}
+
+		// Initial static chip click handlers
+		document.querySelectorAll('md-assist-chip').forEach(chip => {
+			chip.addEventListener('click', () => insertPlaceholder(chip.label))
+		})
+
+		btnPreferences.addEventListener('click', () => prefDialog.show())
+		btnPrefClose.addEventListener('click', () => prefDialog.close())
+
+		prefTheme.addEventListener('change', async () => {
+			const theme = prefTheme.value
+			updateTheme(theme)
+			await window.api.setTheme(theme)
+		})
+
+		prefStartOs.addEventListener('change', async () => {
+			await window.api.setAutostart(prefStartOs.selected)
+		})
+
+		async function runVerification() {
+			verifyResultText.textContent = 'Verifying...'
+			try {
+				const res = await window.api.verifyNow()
+				if (res.error) {
+					verifyResultText.textContent = 'Error: ' + res.error
+					showWarning(`Verification check failed: ${res.error}`)
+				} else {
+					serverAboutVal.textContent = res.text || '(empty)'
+					const timeStr = res.lastUpdateTime ? new Date(res.lastUpdateTime).toLocaleTimeString() : 'Just now'
+					verifyResultText.textContent = `Verified at ${timeStr}`
+					clearWarning()
+				}
+			} catch (err) {
+				verifyResultText.textContent = 'Error verifying'
+			}
+		}
+
+		document.getElementById('btn-verify-now').addEventListener('click', runVerification)
+
+		async function loadSettings() {
+			if (!window.api) return
+			currentConfig = await window.api.getConfig()
+
+			updateEveryInput.value = String(currentConfig.updateEvery)
+			formatTextInput.value = currentConfig.format || ''
+			setSource(currentConfig.source || 'Local')
+
+			prefTheme.value = currentConfig.theme || 'System'
+			updateTheme(currentConfig.theme || 'System')
+
+			prefPauseEmoji.selected = currentConfig.appendPauseEmoji ?? true
+			prefPluginPort.value = String(currentConfig.pluginPort || 6970)
+
+			try {
+				const autoStartStatus = await window.api.getAutostart()
+				prefStartOs.selected = Boolean(autoStartStatus && autoStartStatus.openAtLogin)
+			} catch (e) {
+				prefStartOs.selected = Boolean(currentConfig.startWithOS)
+			}
+
+			try {
+				const placeholders = await window.api.getPluginPlaceholders()
+				if (Array.isArray(placeholders) && placeholders.length > 0) {
+					renderPlaceholders(placeholders)
+				}
+			} catch {}
+
+			updateCounter()
+			runVerification()
+
+			// Query updater status
+			try {
+				const upStatus = await window.api.getUpdaterStatus()
+				if (upStatus) {
+					updaterStatusDesc.textContent = `Version: v${upStatus.currentVersion} • ${upStatus.updateAvailable ? 'Update available!' : 'Up to date'}`
+				}
+			} catch {}
+		}
+
+		document.getElementById('btn-save').addEventListener('click', async () => {
+			const interval = parseInt(updateEveryInput.value, 10) || 1
+			const format = (formatTextInput.value || '').trim() || 'Listening to [artist] - [title] | [bio]'
+			const pluginPort = parseInt(prefPluginPort.value, 10) || 6970
+
+			const newConfig = {
+				...currentConfig,
+				updateEvery: Math.max(1, Math.min(60, interval)),
+				format,
+				source: currentSource,
+				theme: prefTheme.value,
+				startWithOS: Boolean(prefStartOs.selected),
+				appendPauseEmoji: Boolean(prefPauseEmoji.selected),
+				pluginPort
+			}
+
+			const res = await window.api.saveConfig(newConfig)
+			if (res.success) {
+				currentConfig = newConfig
+				showSuccess('Settings saved and updated successfully')
+			} else {
+				showWarning(res.error || 'Failed to save settings')
+			}
+		})
+
+		document.getElementById('btn-reset').addEventListener('click', async () => {
+			if (confirm('Reset all settings to default values?')) {
+				currentConfig = await window.api.resetConfig()
+				updateEveryInput.value = String(currentConfig.updateEvery)
+				formatTextInput.value = currentConfig.format
+				setSource('Local')
+				prefTheme.value = currentConfig.theme
+				updateTheme(currentConfig.theme)
+				prefStartOs.selected = currentConfig.startWithOS
+				prefPauseEmoji.selected = currentConfig.appendPauseEmoji
+				prefPluginPort.value = String(currentConfig.pluginPort)
+				renderPlaceholders(['[artist]', '[title]', '[album]', '[tracknum]', '[bio]'])
+				updateCounter()
+				showSuccess('Settings reset to defaults')
+			}
+		})
+
+		document.getElementById('btn-exit').addEventListener('click', () => {
+			window.api?.exitApp()
+		})
+
+		document.getElementById('btn-logout').addEventListener('click', async () => {
+			if (confirm('Are you sure you want to unlink and log out of WhatsApp?')) {
+				await window.api.logoutWhatsApp()
+			}
+		})
+
+		// Updater event wiring
+		btnCheckUpdate.addEventListener('click', async () => {
+			updaterStatusDesc.textContent = 'Checking GitHub Releases...'
+			btnCheckUpdate.disabled = true
+			try {
+				const status = await window.api.checkForUpdates()
+				if (!status.updateAvailable) {
+					updaterStatusDesc.textContent = `Version: v${status.currentVersion} • Running the latest version!`
+				}
+			} catch (err) {
+				updaterStatusDesc.textContent = `Update check error: ${err.message || err}`
+			} finally {
+				btnCheckUpdate.disabled = false
+			}
+		})
+
+		btnInstallUpdate.addEventListener('click', async () => {
+			await window.api.installUpdate()
+		})
+
+		function showWarning(msg) {
+			warningBanner.textContent = msg
+			warningBanner.style.display = 'block'
+			successBanner.style.display = 'none'
+		}
+
+		function clearWarning() {
+			warningBanner.style.display = 'none'
+		}
+
+		function showSuccess(msg) {
+			successBanner.textContent = msg
+			successBanner.style.display = 'block'
+			warningBanner.style.display = 'none'
+			setTimeout(() => {
+				successBanner.style.display = 'none'
+			}, 3000)
+		}
+
+		if (window.api) {
+			window.api.onPresenceStatus((status) => {
+				if (status.currentTrack) {
+					const t = status.currentTrack
+					nowPlayingVal.textContent = `${t.artist} - ${t.title}`
+				} else {
+					nowPlayingVal.textContent = 'None'
+				}
+
+				if (status.lastWrittenText) {
+					serverAboutVal.textContent = status.lastWrittenText
+				}
+
+				if (status.isBackingOff && status.errorMessage) {
+					showWarning(`Warning: ${status.errorMessage}`)
+				} else if (!status.isBackingOff) {
+					clearWarning()
+				}
+			})
+
+			window.api.onConnectionStatus((status) => {
+				waStatusVal.textContent = status
+				if (status === 'connected') {
+					runVerification()
+				}
+			})
+
+			window.api.onVerificationResult((res) => {
+				if (!res.verified) {
+					showWarning(res.error || 'WhatsApp About server verification mismatch')
+				} else {
+					clearWarning()
+					serverAboutVal.textContent = res.serverText || '(empty)'
+					const timeStr = res.lastUpdateTime ? new Date(res.lastUpdateTime).toLocaleTimeString() : 'Just now'
+					verifyResultText.textContent = `Verified at ${timeStr}`
+				}
+			})
+
+			window.api.onPluginPlaceholders((placeholders) => {
+				if (Array.isArray(placeholders) && placeholders.length > 0) {
+					renderPlaceholders(placeholders)
+				}
+			})
+
+			window.api.onUpdateAvailable((info) => {
+				updaterStatusDesc.textContent = `New update v${info.version} available! Downloading...`
+				updaterProgress.style.display = 'block'
+				window.api.downloadUpdate().catch(() => {})
+			})
+
+			window.api.onUpdateNotAvailable((info) => {
+				updaterStatusDesc.textContent = `Version: v${info.currentVersion} • You are on the latest release.`
+				updaterProgress.style.display = 'none'
+			})
+
+			window.api.onUpdateProgress((prog) => {
+				updaterProgress.style.display = 'block'
+				updaterProgress.value = prog.percent / 100
+				updaterStatusDesc.textContent = `Downloading update: ${prog.percent}%`
+			})
+
+			window.api.onUpdateDownloaded((info) => {
+				updaterProgress.style.display = 'none'
+				updaterStatusDesc.textContent = `Update v${info.version} downloaded! Ready to install.`
+				btnInstallUpdate.style.display = 'inline-flex'
+			})
+
+			window.api.onUpdateError((err) => {
+				updaterProgress.style.display = 'none'
+				updaterStatusDesc.textContent = `Update error: ${err.message}`
+			})
+
+			loadSettings()
+		}
+	</script>
+</body>
+</html>

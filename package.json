@@ -1,0 +1,49 @@
+{
+  "name": "WAPresence",
+  "productName": "WAPresence",
+  "version": "1.0.0",
+  "description": "WhatsApp Media Presence Desktop Application",
+  "type": "module",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build:main": "tsc -p tsconfig.json",
+    "build:renderer": "node scripts/build-renderer.js",
+    "build:assets": "node scripts/copy-assets.js",
+    "build": "pnpm run build:main && pnpm run build:renderer && pnpm run build:assets",
+    "start": "electron .",
+    "test": "vitest run",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [
+    "whatsapp",
+    "presence",
+    "baileys",
+    "electron",
+    "material-design-3"
+  ],
+  "author": "WAPresence",
+  "license": "MIT",
+  "dependencies": {
+    "@material/material-color-utilities": "^0.4.0",
+    "@material/web": "^2.5.0",
+    "@whiskeysockets/baileys": "file:..\\Baileys",
+    "dbus-next": "^0.10.2",
+    "electron-updater": "^6.8.11",
+    "ini": "^7.0.0",
+    "pino": "^10.4.0",
+    "pino-pretty": "^13.2.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@esbuild/win32-x64": "^0.28.2",
+    "@types/ini": "^4.1.1",
+    "@types/node": "^26.6.6",
+    "@types/qrcode": "^1.5.6",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
