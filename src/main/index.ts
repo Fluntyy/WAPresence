@@ -60,9 +60,21 @@ let isLoggingOut = false
 let spotifySetupResolver: ((value: any) => void) | null = null
 
 function getIconPath(): string {
+	const currentFile = fileURLToPath(import.meta.url)
+	const currentDir = path.dirname(currentFile)
+
+	// In packaged asar, assets/icon.ico is at root of app.asar
+	const asarIcon = path.join(app.getAppPath(), 'assets', 'icon.ico')
+	if (fs.existsSync(asarIcon)) return asarIcon
+
+	// In dist/main/..., assets is ../../assets/icon.ico
+	const distIcon = path.resolve(currentDir, '..', '..', 'assets', 'icon.ico')
+	if (fs.existsSync(distIcon)) return distIcon
+
 	const rootIcon = path.resolve(process.cwd(), 'assets', 'icon.ico')
 	if (fs.existsSync(rootIcon)) return rootIcon
-	return path.join(app.getAppPath(), 'assets', 'icon.ico')
+
+	return asarIcon
 }
 
 function getAppIcon(): Electron.NativeImage {
@@ -71,9 +83,30 @@ function getAppIcon(): Electron.NativeImage {
 }
 
 function getHtmlPath(subPath: string): string {
+	const currentFile = fileURLToPath(import.meta.url)
+	const currentDir = path.dirname(currentFile)
+
+	// 1. Candidate relative to dist/main -> dist/renderer (works in packaged asar & dist)
+	const distRel = path.resolve(currentDir, '..', 'renderer', subPath)
+	if (fs.existsSync(distRel)) return distRel
+
+	// 2. Candidate inside app.getAppPath() dist/renderer
+	const asarDist = path.join(app.getAppPath(), 'dist', 'renderer', subPath)
+	if (fs.existsSync(asarDist)) return asarDist
+
+	// 3. Candidate in project cwd dist/renderer
+	const cwdDist = path.resolve(process.cwd(), 'dist', 'renderer', subPath)
+	if (fs.existsSync(cwdDist)) return cwdDist
+
+	// 4. Candidate in project cwd src/renderer (dev mode fallback)
 	const srcPath = path.resolve(process.cwd(), 'src', 'renderer', subPath)
 	if (fs.existsSync(srcPath)) return srcPath
-	return path.join(app.getAppPath(), 'src', 'renderer', subPath)
+
+	// 5. Candidate inside app.getAppPath() src/renderer
+	const asarSrc = path.join(app.getAppPath(), 'src', 'renderer', subPath)
+	if (fs.existsSync(asarSrc)) return asarSrc
+
+	return distRel
 }
 
 function getPreloadPath(): string {
@@ -126,6 +159,10 @@ function createLoginWindow() {
 		log.info({ level, message, line, sourceId }, 'LoginWindow console')
 	})
 
+	loginWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+		log.error({ errorCode, errorDescription, validatedURL }, 'LoginWindow failed to load')
+	})
+
 	loginWindow.loadFile(getHtmlPath('login/index.html'))
 
 	loginWindow.webContents.on('did-finish-load', () => {
@@ -170,6 +207,18 @@ function createSettingsWindow() {
 	if (process.platform === 'win32') {
 		settingsWindow.setIcon(appIcon)
 	}
+
+	settingsWindow.webContents.on('preload-error', (event, preloadPath, error) => {
+		log.error({ preloadPath, error }, 'Preload error in settingsWindow')
+	})
+
+	settingsWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+		log.info({ level, message, line, sourceId }, 'SettingsWindow console')
+	})
+
+	settingsWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+		log.error({ errorCode, errorDescription, validatedURL }, 'SettingsWindow failed to load')
+	})
 
 	settingsWindow.loadFile(getHtmlPath('settings/index.html'))
 
@@ -243,6 +292,18 @@ function createSpotifyDialog(): Promise<any> {
 		if (process.platform === 'win32') {
 			spotifyDialog.setIcon(appIcon)
 		}
+
+		spotifyDialog.webContents.on('preload-error', (event, preloadPath, error) => {
+			log.error({ preloadPath, error }, 'Preload error in spotifyDialog')
+		})
+
+		spotifyDialog.webContents.on('console-message', (event, level, message, line, sourceId) => {
+			log.info({ level, message, line, sourceId }, 'SpotifyDialog console')
+		})
+
+		spotifyDialog.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+			log.error({ errorCode, errorDescription, validatedURL }, 'SpotifyDialog failed to load')
+		})
 
 		spotifyDialog.loadFile(getHtmlPath('spotify-setup/index.html'))
 

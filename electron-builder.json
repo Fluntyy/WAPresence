@@ -10,6 +10,9 @@
     "assets/**/*",
     "package.json"
   ],
+  "asarUnpack": [
+    "**/smtc-helper.ps1"
+  ],
   "publish": {
     "provider": "github",
     "owner": "Fluntyy",

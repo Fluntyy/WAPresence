@@ -57,6 +57,22 @@
 			margin-top: auto;
 			padding-top: 10px;
 		}
+
+		#btn-ok {
+			--md-filled-button-label-text-color: #ffffff !important;
+			--md-filled-button-icon-color: #ffffff !important;
+			--md-filled-button-hover-label-text-color: #ffffff !important;
+			--md-filled-button-hover-icon-color: #ffffff !important;
+			--md-filled-button-focus-label-text-color: #ffffff !important;
+			--md-filled-button-focus-icon-color: #ffffff !important;
+			--md-filled-button-pressed-label-text-color: #ffffff !important;
+			--md-filled-button-pressed-icon-color: #ffffff !important;
+			color: #ffffff !important;
+		}
+
+		#btn-ok .material-symbols-rounded {
+			color: #ffffff !important;
+		}
 	</style>
 </head>
 <body>
@@ -90,7 +106,7 @@
 
 	<div class="actions-row">
 		<md-text-button id="btn-cancel">Cancel</md-text-button>
-		<md-filled-button id="btn-ok" style="background: #1db954; --md-filled-button-label-text-color: #000000;">
+		<md-filled-button id="btn-ok">
 			<span class="material-symbols-rounded" slot="icon">check</span>
 			Authorize & Connect
 		</md-filled-button>

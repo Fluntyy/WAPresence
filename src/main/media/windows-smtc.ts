@@ -20,15 +20,20 @@ export class WindowsSmtcSource extends EventEmitter implements IMediaSource {
 		const currentFile = fileURLToPath(import.meta.url)
 		const currentDir = path.dirname(currentFile)
 
-		// Candidate 1: same directory (dist/main/media/smtc-helper.ps1)
+		// Candidate 1: app.asar.unpacked if packaged with asarUnpack
+		const unpackedDir = currentDir.replace('app.asar', 'app.asar.unpacked')
+		const unpackedFile = path.join(unpackedDir, 'smtc-helper.ps1')
+		if (fs.existsSync(unpackedFile)) return unpackedFile
+
+		// Candidate 2: same directory (dist/main/media/smtc-helper.ps1)
 		const sameDir = path.join(currentDir, 'smtc-helper.ps1')
 		if (fs.existsSync(sameDir)) return sameDir
 
-		// Candidate 2: src directory during dev/vitest (src/main/media/smtc-helper.ps1)
+		// Candidate 3: src directory during dev/vitest (src/main/media/smtc-helper.ps1)
 		const srcDir = path.resolve(currentDir, '..', '..', 'src', 'main', 'media', 'smtc-helper.ps1')
 		if (fs.existsSync(srcDir)) return srcDir
 
-		// Candidate 3: root relative
+		// Candidate 4: root relative
 		const rootPath = path.resolve(process.cwd(), 'src', 'main', 'media', 'smtc-helper.ps1')
 		if (fs.existsSync(rootPath)) return rootPath
 
