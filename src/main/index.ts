@@ -7,7 +7,7 @@ import { getConfigPath } from './paths.js'
 import { WhatsAppClient } from './whatsapp/client.js'
 import { PresenceUpdater } from './updater.js'
 import { SpotifySource } from './media/spotify.js'
-import { getAutoStartStatus, setAutoStart } from './autostart.js'
+import { getAutoStartStatus, setAutoStart, isStartedHidden } from './autostart.js'
 import { UpdaterService } from './updater-service.js'
 import { getLogger } from './logger.js'
 
@@ -36,6 +36,8 @@ let loginWindow: BrowserWindow | null = null
 let settingsWindow: BrowserWindow | null = null
 let spotifyDialog: BrowserWindow | null = null
 let tray: Tray | null = null
+
+let isLaunchedHidden = isStartedHidden()
 
 let config: AppConfig = loadConfig()
 
@@ -265,11 +267,14 @@ function createTray() {
 		{
 			label: 'Settings',
 			click: () => {
-				if (settingsWindow) {
+				if (settingsWindow && !settingsWindow.isDestroyed()) {
+					if (settingsWindow.isMinimized()) settingsWindow.restore()
 					settingsWindow.show()
 					settingsWindow.focus()
-				} else {
+				} else if (whatsappClient.getState() === 'connected') {
 					createSettingsWindow()
+				} else {
+					createLoginWindow()
 				}
 			}
 		},
@@ -304,11 +309,14 @@ function createTray() {
 	tray.setContextMenu(contextMenu)
 
 	tray.on('double-click', () => {
-		if (settingsWindow) {
+		if (settingsWindow && !settingsWindow.isDestroyed()) {
+			if (settingsWindow.isMinimized()) settingsWindow.restore()
 			settingsWindow.show()
 			settingsWindow.focus()
-		} else {
+		} else if (whatsappClient.getState() === 'connected') {
 			createSettingsWindow()
+		} else {
+			createLoginWindow()
 		}
 	})
 }
@@ -515,7 +523,9 @@ function setupIpcHandlers() {
 // WhatsApp client event bridging
 function setupWhatsAppEvents() {
 	whatsappClient.on('qr', (dataUrl: string) => {
-		createLoginWindow()
+		if (!isLaunchedHidden) {
+			createLoginWindow()
+		}
 		if (loginWindow && !loginWindow.isDestroyed()) {
 			if (!loginWindow.webContents.isLoading()) {
 				loginWindow.webContents.send('whatsapp:qr', dataUrl)
@@ -530,7 +540,12 @@ function setupWhatsAppEvents() {
 			loginWindow.close()
 			loginWindow = null
 		}
-		createSettingsWindow()
+		if (!isLaunchedHidden) {
+			createSettingsWindow()
+		} else {
+			log.info('WAPresence started minimized with OS; staying in system tray')
+			isLaunchedHidden = false
+		}
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
 			settingsWindow.webContents.send('whatsapp:status', 'connected')
 		}
@@ -642,26 +657,39 @@ function setupUpdaterEvents() {
 }
 
 app.on('second-instance', () => {
-	if (settingsWindow) {
+	log.info('Second instance launch detected; focusing or restoring existing app')
+	isLaunchedHidden = false
+	if (settingsWindow && !settingsWindow.isDestroyed()) {
 		if (settingsWindow.isMinimized()) settingsWindow.restore()
 		settingsWindow.show()
 		settingsWindow.focus()
-	} else if (loginWindow) {
+	} else if (loginWindow && !loginWindow.isDestroyed()) {
 		if (loginWindow.isMinimized()) loginWindow.restore()
 		loginWindow.show()
 		loginWindow.focus()
+	} else {
+		// Both windows unloaded/closed in tray: restore dashboard or login
+		if (whatsappClient.getState() === 'connected') {
+			createSettingsWindow()
+		} else {
+			createLoginWindow()
+		}
 	}
 })
 
 app.whenReady().then(async () => {
-	log.info('WAPresence starting up')
+	log.info({ isLaunchedHidden }, 'WAPresence starting up')
 	setupIpcHandlers()
 	setupWhatsAppEvents()
 	setupUpdaterEvents()
 	createTray()
 
-	// Open login window immediately so user sees loading state
-	createLoginWindow()
+	if (!isLaunchedHidden) {
+		// Open login window immediately so user sees loading state
+		createLoginWindow()
+	} else {
+		log.info('App launched minimized; starting silently in tray')
+	}
 
 	// Connect to WhatsApp
 	await whatsappClient.connect()

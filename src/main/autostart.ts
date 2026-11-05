@@ -31,6 +31,19 @@ export function getAutoStartStatus(): AutoStartStatus {
 	}
 }
 
+export function isStartedHidden(): boolean {
+	if (process.argv.includes('--hidden') || process.argv.includes('--minimized')) {
+		return true
+	}
+	try {
+		const settings = app.getLoginItemSettings() as any
+		if (settings?.wasOpenedAsHidden || settings?.wasOpenedAtLogin) {
+			return true
+		}
+	} catch {}
+	return false
+}
+
 export function setAutoStart(enable: boolean): boolean {
 	if (!isAutoStartSupported()) {
 		log.warn(`Auto-start is not supported on platform: ${process.platform}`)
@@ -46,16 +59,19 @@ export function setAutoStart(enable: boolean): boolean {
 		}
 
 		if (process.platform === 'win32') {
-			// On Windows, pass path and args
+			// On Windows, pass path and --hidden arg
 			options.path = execPath
-			options.args = isPackaged ? [] : [process.cwd()]
+			options.args = enable ? (isPackaged ? ['--hidden'] : [process.cwd(), '--hidden']) : []
 		} else if (process.platform === 'linux') {
 			// On Linux, Electron writes ~/.config/autostart/
 			options.path = execPath
+			;(options as any).args = enable ? ['--hidden'] : []
+		} else if (process.platform === 'darwin') {
+			;(options as any).openAsHidden = enable
 		}
 
 		app.setLoginItemSettings(options)
-		log.info({ enable, platform: process.platform }, 'Updated OS auto-start settings')
+		log.info({ enable, platform: process.platform, args: options.args }, 'Updated OS auto-start settings')
 		return true
 	} catch (err) {
 		log.error({ err, enable }, 'Error updating auto-start settings')

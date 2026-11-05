@@ -76,7 +76,7 @@ In Settings, you can configure your presence string using the following placehol
   ```ini
   [Configuration]
   UpdateEvery = 1
-  Format = Listening to [artist] - [title] | [bio]
+  Format = Listening to [artist] - [title]
   Source = Local
 
   [Spotify]

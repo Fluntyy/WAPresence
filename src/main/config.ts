@@ -4,7 +4,7 @@ import ini from 'ini'
 import { getConfigPath } from './paths.js'
 
 export const DEFAULT_UPDATE_EVERY = 1
-export const DEFAULT_FORMAT = 'Listening to [artist] - [title] | [bio]'
+export const DEFAULT_FORMAT = 'Listening to [artist] - [title]'
 export const DEFAULT_SOURCE = 'Local'
 export const DEFAULT_REDIRECT_URI = 'http://127.0.0.1:6969/callback'
 export const DEFAULT_CONFIG_FILE = 'config.ini'
