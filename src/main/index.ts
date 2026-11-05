@@ -256,6 +256,26 @@ function createSpotifyDialog(): Promise<any> {
 	})
 }
 
+function openSettingsAndCheckUpdates() {
+	if (settingsWindow && !settingsWindow.isDestroyed()) {
+		if (settingsWindow.isMinimized()) settingsWindow.restore()
+		settingsWindow.show()
+		settingsWindow.focus()
+		settingsWindow.webContents.send('app:open-preferences-and-check-updates')
+	} else {
+		createSettingsWindow()
+		if (settingsWindow) {
+			settingsWindow.webContents.once('did-finish-load', () => {
+				setTimeout(() => {
+					if (settingsWindow && !settingsWindow.isDestroyed()) {
+						settingsWindow.webContents.send('app:open-preferences-and-check-updates')
+					}
+				}, 200)
+			})
+		}
+	}
+}
+
 function createTray() {
 	if (tray) return
 
@@ -280,14 +300,8 @@ function createTray() {
 		},
 		{
 			label: 'Check for Updates',
-			click: async () => {
-				if (!settingsWindow) {
-					createSettingsWindow()
-				} else {
-					settingsWindow.show()
-					settingsWindow.focus()
-				}
-				await updaterService.checkForUpdates()
+			click: () => {
+				openSettingsAndCheckUpdates()
 			}
 		},
 		{

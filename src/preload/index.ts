@@ -83,5 +83,10 @@ contextBridge.exposeInMainWorld('api', {
 		const listener = (_: any, data: any) => cb(data)
 		ipcRenderer.on('whatsapp:verification-result', listener)
 		return () => ipcRenderer.removeListener('whatsapp:verification-result', listener)
+	},
+	onOpenPreferencesAndCheckUpdates: (cb: () => void) => {
+		const listener = () => cb()
+		ipcRenderer.on('app:open-preferences-and-check-updates', listener)
+		return () => ipcRenderer.removeListener('app:open-preferences-and-check-updates', listener)
 	}
 })

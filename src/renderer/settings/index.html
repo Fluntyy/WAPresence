@@ -835,8 +835,12 @@
 			if (!status) return
 			if (status.currentTrack && (status.currentTrack.title || status.currentTrack.artist)) {
 				const t = status.currentTrack
-				const display = t.artist && t.title ? `${t.artist} - ${t.title}` : (t.title || t.artist)
-				nowPlayingVal.textContent = t.isPlaying === false ? `${display} ⏸️` : display
+				let display = t.artist && t.title ? `${t.artist} - ${t.title}` : (t.title || t.artist)
+				// Prevent duplicate pause emoji if already present in title
+				if (t.isPlaying === false && !display.includes('⏸️')) {
+					display = `${display} ⏸️`
+				}
+				nowPlayingVal.textContent = display
 			} else {
 				nowPlayingVal.textContent = 'None'
 			}
@@ -1068,6 +1072,12 @@
 			window.api.onUpdateError((err) => {
 				updaterProgress.style.display = 'none'
 				updaterStatusDesc.textContent = `Update error: ${err.message}`
+			})
+
+			window.api.onOpenPreferencesAndCheckUpdates(() => {
+				document.body.classList.add('dialog-open')
+				prefDialog.show()
+				btnCheckUpdate.click()
 			})
 
 			loadSettings()
