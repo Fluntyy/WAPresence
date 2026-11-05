@@ -150,8 +150,8 @@ function createSettingsWindow() {
 	const appIcon = getAppIcon()
 
 	settingsWindow = new BrowserWindow({
-		width: 540,
-		height: 650,
+		width: 600,
+		height: 750,
 		resizable: false,
 		title: 'WAPresence',
 		icon: appIcon,

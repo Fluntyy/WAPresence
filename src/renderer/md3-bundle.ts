@@ -30,8 +30,8 @@ const origFirstUpdated = (MdDialog.prototype as any).firstUpdated
 				dialog {
 					margin: auto !important;
 					inset: 0 !important;
-					max-width: min(460px, calc(100vw - 32px)) !important;
-					max-height: min(540px, calc(100vh - 48px)) !important;
+					max-width: min(500px, calc(100vw - 32px)) !important;
+					max-height: min(580px, calc(100vh - 48px)) !important;
 					border-radius: 28px !important;
 					box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7) !important;
 					overflow: hidden !important;

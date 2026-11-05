@@ -24,13 +24,13 @@
 			align-items: center;
 			justify-content: space-between;
 			border-bottom: 1px solid var(--md-sys-color-outline-variant);
-			padding-bottom: 12px;
+			padding-bottom: 14px;
 		}
 
 		.app-title-group {
 			display: flex;
 			align-items: center;
-			gap: 10px;
+			gap: 12px;
 		}
 
 		.app-title {
@@ -43,7 +43,7 @@
 		.app-bar-actions {
 			display: flex;
 			align-items: center;
-			gap: 6px;
+			gap: 10px;
 		}
 
 		.md3-card {
@@ -157,12 +157,34 @@
 			color: #a7f3d0;
 		}
 
+		/* ── md-dialog clean styling & generous padding ── */
+		.dialog-headline {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 24px 28px 12px 28px;
+			font-size: 18px;
+			font-weight: 700;
+			color: var(--md-sys-color-on-surface);
+		}
+
+		.dialog-headline .material-symbols-rounded {
+			font-size: 24px;
+			color: var(--md-sys-color-primary);
+		}
+
 		.pref-list {
 			display: flex;
 			flex-direction: column;
-			gap: 16px;
-			padding: 4px 0;
+			gap: 18px;
+			padding: 8px 28px 24px 28px;
 			overflow-x: hidden;
+		}
+
+		.dialog-actions {
+			display: flex;
+			justify-content: flex-end;
+			padding: 8px 28px 20px 28px;
 		}
 
 		.pref-row {
@@ -353,7 +375,7 @@
 
 	<!-- Preferences & Updates Dialog -->
 	<md-dialog id="pref-dialog">
-		<div slot="headline" style="display: flex; align-items: center; gap: 8px;">
+		<div slot="headline" class="dialog-headline">
 			<span class="material-symbols-rounded">settings</span>
 			Preferences & Updates
 		</div>
@@ -422,7 +444,7 @@
 				</div>
 			</div>
 		</div>
-		<div slot="actions">
+		<div slot="actions" class="dialog-actions">
 			<md-text-button id="btn-pref-close">Done</md-text-button>
 		</div>
 	</md-dialog>
