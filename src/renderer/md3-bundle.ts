@@ -6,6 +6,8 @@ import '@material/web/switch/switch.js'
 import '@material/web/checkbox/checkbox.js'
 import '@material/web/textfield/outlined-text-field.js'
 import '@material/web/textfield/filled-text-field.js'
+import '@material/web/select/outlined-select.js'
+import '@material/web/select/select-option.js'
 import { MdDialog } from '@material/web/dialog/dialog.js'
 import '@material/web/ripple/ripple.js'
 import '@material/web/menu/menu.js'
@@ -37,9 +39,10 @@ const origFirstUpdated = (MdDialog.prototype as any).firstUpdated
 					overflow: hidden !important;
 				}
 				.scrim {
-					opacity: 65% !important;
-					backdrop-filter: blur(4px) !important;
-					background: #000000 !important;
+					opacity: 70% !important;
+					backdrop-filter: blur(8px) !important;
+					-webkit-backdrop-filter: blur(8px) !important;
+					background: rgba(0, 0, 0, 0.65) !important;
 				}
 				.container {
 					background: var(--md-sys-color-surface-container-high, #252a28) !important;

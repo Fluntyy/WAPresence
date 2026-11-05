@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('api', {
 		ipcRenderer.invoke('spotify:close-setup', { confirmed, clientID, redirectURI }),
 
 	getQrCode: () => ipcRenderer.invoke('whatsapp:get-qr'),
+	getPresenceStatus: () => ipcRenderer.invoke('presence:get-status'),
 
 	// Autostart & System Settings
 	getAutostart: () => ipcRenderer.invoke('autostart:get'),

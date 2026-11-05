@@ -9,14 +9,38 @@
 	<script src="../md3.bundle.js"></script>
 	<style>
 		body {
+			margin: 0;
+			padding: 0;
+			min-height: 100vh;
+			background: var(--md-sys-color-surface);
+			color: var(--md-sys-color-on-surface);
+			box-sizing: border-box;
+			overflow-x: hidden;
+			overflow-y: auto;
+			scrollbar-width: none !important;
+			-ms-overflow-style: none !important;
+		}
+
+		body::-webkit-scrollbar {
+			display: none !important;
+			width: 0 !important;
+			height: 0 !important;
+		}
+
+		#app-container {
 			padding: 16px 20px;
 			display: flex;
 			flex-direction: column;
 			gap: 14px;
 			min-height: 100vh;
-			background: var(--md-sys-color-surface);
-			color: var(--md-sys-color-on-surface);
 			box-sizing: border-box;
+			transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		body.dialog-open #app-container {
+			filter: blur(6px);
+			pointer-events: none;
+			user-select: none;
 		}
 
 		.app-bar {
@@ -43,7 +67,7 @@
 		.app-bar-actions {
 			display: flex;
 			align-items: center;
-			gap: 10px;
+			gap: 4px;
 		}
 
 		.md3-card {
@@ -213,16 +237,6 @@
 			word-break: break-word;
 		}
 
-		select.md3-select {
-			background: var(--md-sys-color-surface-container-high);
-			color: var(--md-sys-color-on-surface);
-			border: 1px solid var(--md-sys-color-outline);
-			border-radius: 8px;
-			padding: 6px 10px;
-			font-size: 13px;
-			outline: none;
-		}
-
 		.footer-row {
 			display: flex;
 			justify-content: space-between;
@@ -240,138 +254,140 @@
 	</style>
 </head>
 <body>
-	<!-- App Bar -->
-	<header class="app-bar">
-		<div class="app-title-group">
-			<img src="../assets/icon.png" alt="WAPresence" class="app-logo">
-			<span class="app-title">WAPresence</span>
-		</div>
-		<div class="app-bar-actions">
-			<md-text-button id="btn-preferences">
-				<span class="material-symbols-rounded" slot="icon">settings</span>
-				Preferences
-			</md-text-button>
-			<md-text-button id="btn-exit" style="--md-sys-color-primary: #ef4444;">
-				<span class="material-symbols-rounded" slot="icon">close</span>
-				Exit
-			</md-text-button>
-			<md-filled-button id="btn-save">
-				<span class="material-symbols-rounded" slot="icon">save</span>
-				Save & Update
-			</md-filled-button>
-		</div>
-	</header>
+	<div id="app-container">
+		<!-- App Bar -->
+		<header class="app-bar">
+			<div class="app-title-group">
+				<img src="../assets/icon.png" alt="WAPresence" class="app-logo">
+				<span class="app-title">WAPresence</span>
+			</div>
+			<div class="app-bar-actions">
+				<md-text-button id="btn-preferences">
+					<span class="material-symbols-rounded" slot="icon">settings</span>
+					Preferences
+				</md-text-button>
+				<md-text-button id="btn-exit" style="--md-sys-color-primary: #ef4444;">
+					<span class="material-symbols-rounded" slot="icon">close</span>
+					Exit
+				</md-text-button>
+				<md-filled-button id="btn-save">
+					<span class="material-symbols-rounded" slot="icon">save</span>
+					Save & Update
+				</md-filled-button>
+			</div>
+		</header>
 
-	<!-- Main Settings Card -->
-	<section class="md3-card">
-		<div class="row-flex">
-			<div style="display: flex; align-items: center; gap: 8px;">
+		<!-- Main Settings Card -->
+		<section class="md3-card">
+			<div class="row-flex">
+				<div style="display: flex; align-items: center; gap: 8px;">
+					<md-outlined-text-field
+						id="update-every"
+						type="number"
+						label="Update Every"
+						suffix-text="sec"
+						min="1"
+						max="60"
+						value="1"
+						style="width: 140px;">
+					</md-outlined-text-field>
+				</div>
+
+				<!-- Source Segmented Control -->
+				<div class="source-segmented">
+					<button type="button" class="source-btn active" id="src-local" data-source="Local">
+						<span class="material-symbols-rounded">computer</span>
+						Local Media
+					</button>
+					<button type="button" class="source-btn" id="src-spotify" data-source="Spotify">
+						<span class="material-symbols-rounded">queue_music</span>
+						Spotify
+					</button>
+					<button type="button" class="source-btn" id="src-plugin" data-source="Plugin">
+						<span class="material-symbols-rounded">extension</span>
+						Plugin
+					</button>
+				</div>
+			</div>
+
+			<!-- Format text field -->
+			<div style="display: flex; flex-direction: column; gap: 6px;">
+				<div style="display: flex; justify-content: space-between; align-items: center;">
+					<span class="card-header-title">
+						<span class="material-symbols-rounded">edit_note</span>
+						Bio Format Text
+					</span>
+					<span id="char-counter" class="char-counter">0/50</span>
+				</div>
 				<md-outlined-text-field
-					id="update-every"
-					type="number"
-					label="Update Every"
-					suffix-text="sec"
-					min="1"
-					max="60"
-					value="1"
-					style="width: 140px;">
+					id="format-text"
+					placeholder="Listening to [artist] - [title] | [bio]"
+					style="width: 100%;">
 				</md-outlined-text-field>
 			</div>
 
-			<!-- Source Segmented Control -->
-			<div class="source-segmented">
-				<button type="button" class="source-btn active" id="src-local" data-source="Local">
-					<span class="material-symbols-rounded">computer</span>
-					Local Media
-				</button>
-				<button type="button" class="source-btn" id="src-spotify" data-source="Spotify">
-					<span class="material-symbols-rounded">queue_music</span>
-					Spotify
-				</button>
-				<button type="button" class="source-btn" id="src-plugin" data-source="Plugin">
-					<span class="material-symbols-rounded">extension</span>
-					Plugin
-				</button>
+			<!-- Dynamic Placeholders Chips -->
+			<div style="display: flex; flex-direction: column; gap: 4px;">
+				<span style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);">Click placeholder to insert:</span>
+				<md-chip-set id="chip-set">
+					<md-assist-chip id="chip-artist" label="[artist]"></md-assist-chip>
+					<md-assist-chip id="chip-title" label="[title]"></md-assist-chip>
+					<md-assist-chip id="chip-album" label="[album]"></md-assist-chip>
+					<md-assist-chip id="chip-tracknum" label="[tracknum]"></md-assist-chip>
+					<md-assist-chip id="chip-bio" label="[bio]"></md-assist-chip>
+				</md-chip-set>
 			</div>
-		</div>
+		</section>
 
-		<!-- Format text field -->
-		<div style="display: flex; flex-direction: column; gap: 6px;">
-			<div style="display: flex; justify-content: space-between; align-items: center;">
-				<span class="card-header-title">
-					<span class="material-symbols-rounded">edit_note</span>
-					Bio Format Text
-				</span>
-				<span id="char-counter" class="char-counter">0/50</span>
+		<!-- Alert Banners -->
+		<div id="warning-banner" class="banner banner-error"></div>
+		<div id="success-banner" class="banner banner-success"></div>
+
+		<!-- Live Status Card -->
+		<section class="md3-card">
+			<div class="card-header-title">
+				<span class="material-symbols-rounded">vital_signs</span>
+				Live Status & WhatsApp Verification
 			</div>
-			<md-outlined-text-field
-				id="format-text"
-				placeholder="Listening to [artist] - [title] | [bio]"
-				style="width: 100%;">
-			</md-outlined-text-field>
-		</div>
 
-		<!-- Dynamic Placeholders Chips -->
-		<div style="display: flex; flex-direction: column; gap: 4px;">
-			<span style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);">Click placeholder to insert:</span>
-			<md-chip-set id="chip-set">
-				<md-assist-chip id="chip-artist" label="[artist]"></md-assist-chip>
-				<md-assist-chip id="chip-title" label="[title]"></md-assist-chip>
-				<md-assist-chip id="chip-album" label="[album]"></md-assist-chip>
-				<md-assist-chip id="chip-tracknum" label="[tracknum]"></md-assist-chip>
-				<md-assist-chip id="chip-bio" label="[bio]"></md-assist-chip>
-			</md-chip-set>
-		</div>
-	</section>
+			<div class="status-item">
+				<span class="status-label">Media Source:</span>
+				<span id="source-val" class="status-value">Local Media</span>
+			</div>
+			<div class="status-item">
+				<span class="status-label">Now Playing:</span>
+				<span id="now-playing-val" class="status-value">None</span>
+			</div>
+			<div class="status-item">
+				<span class="status-label">WhatsApp Client:</span>
+				<span id="wa-status-val" class="status-value">Checking...</span>
+			</div>
+			<div class="status-item">
+				<span class="status-label">Server Verified Bio:</span>
+				<span id="server-about-val" class="status-value font-mono-code">None</span>
+			</div>
 
-	<!-- Alert Banners -->
-	<div id="warning-banner" class="banner banner-error"></div>
-	<div id="success-banner" class="banner banner-success"></div>
+			<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
+				<md-outlined-button id="btn-verify-now">
+					<span class="material-symbols-rounded" slot="icon">verified</span>
+					Verify now
+				</md-outlined-button>
+				<span id="verify-result-text" style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);"></span>
+			</div>
+		</section>
 
-	<!-- Live Status Card -->
-	<section class="md3-card">
-		<div class="card-header-title">
-			<span class="material-symbols-rounded">vital_signs</span>
-			Live Status & WhatsApp Verification
-		</div>
-
-		<div class="status-item">
-			<span class="status-label">Media Source:</span>
-			<span id="source-val" class="status-value">Local Media</span>
-		</div>
-		<div class="status-item">
-			<span class="status-label">Now Playing:</span>
-			<span id="now-playing-val" class="status-value">None</span>
-		</div>
-		<div class="status-item">
-			<span class="status-label">WhatsApp Client:</span>
-			<span id="wa-status-val" class="status-value">Checking...</span>
-		</div>
-		<div class="status-item">
-			<span class="status-label">Server Verified Bio:</span>
-			<span id="server-about-val" class="status-value font-mono-code">None</span>
-		</div>
-
-		<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
-			<md-outlined-button id="btn-verify-now">
-				<span class="material-symbols-rounded" slot="icon">verified</span>
-				Verify now
-			</md-outlined-button>
-			<span id="verify-result-text" style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);"></span>
-		</div>
-	</section>
-
-	<!-- Footer Actions -->
-	<footer class="footer-row">
-		<md-text-button id="btn-reset">
-			<span class="material-symbols-rounded" slot="icon">restart_alt</span>
-			Reset to Default
-		</md-text-button>
-		<md-text-button id="btn-logout" style="--md-sys-color-primary: #ef4444;">
-			<span class="material-symbols-rounded" slot="icon">logout</span>
-			Log out WhatsApp
-		</md-text-button>
-	</footer>
+		<!-- Footer Actions -->
+		<footer class="footer-row">
+			<md-text-button id="btn-reset">
+				<span class="material-symbols-rounded" slot="icon">restart_alt</span>
+				Reset to Default
+			</md-text-button>
+			<md-text-button id="btn-logout" style="--md-sys-color-primary: #ef4444;">
+				<span class="material-symbols-rounded" slot="icon">logout</span>
+				Log out WhatsApp
+			</md-text-button>
+		</footer>
+	</div> <!-- /#app-container -->
 
 	<!-- Preferences & Updates Dialog -->
 	<md-dialog id="pref-dialog">
@@ -395,11 +411,17 @@
 					<div class="pref-info-title">Theme</div>
 					<div class="pref-info-desc">Material Design 3 appearance scheme.</div>
 				</div>
-				<select id="pref-theme" class="md3-select">
-					<option value="System">System (Default)</option>
-					<option value="Dark">Dark</option>
-					<option value="Light">Light</option>
-				</select>
+				<md-outlined-select id="pref-theme" style="min-width: 170px;">
+					<md-select-option value="System" selected>
+						<div slot="headline">System (Default)</div>
+					</md-select-option>
+					<md-select-option value="Dark">
+						<div slot="headline">Dark</div>
+					</md-select-option>
+					<md-select-option value="Light">
+						<div slot="headline">Light</div>
+					</md-select-option>
+				</md-outlined-select>
 			</div>
 
 			<!-- Pause Emoji -->
@@ -449,6 +471,24 @@
 		</div>
 	</md-dialog>
 
+	<!-- WhatsApp Unlink / Logout Confirmation Dialog -->
+	<md-dialog id="logout-dialog">
+		<div slot="headline" class="dialog-headline">
+			<span class="material-symbols-rounded" style="color: var(--md-sys-color-error, #ef4444);">logout</span>
+			Unlink WhatsApp?
+		</div>
+		<div slot="content" class="dialog-content-body" style="padding: 10px 28px 24px 28px; color: var(--md-sys-color-on-surface-variant); font-size: 14px; line-height: 1.5;">
+			Are you sure you want to unlink and log out of WhatsApp? Your active presence session will stop and you will need to scan a QR code again to reconnect.
+		</div>
+		<div slot="actions" class="dialog-actions">
+			<md-text-button id="btn-logout-cancel">Cancel</md-text-button>
+			<md-filled-button id="btn-logout-confirm" style="--md-sys-color-primary: #ef4444; --md-sys-color-on-primary: #ffffff;">
+				<span class="material-symbols-rounded" slot="icon">logout</span>
+				Unlink
+			</md-filled-button>
+		</div>
+	</md-dialog>
+
 	<script>
 		// Material Theme initialization
 		const SEED_COLOR = '#00a884'
@@ -486,7 +526,7 @@
 		const srcPlugin = document.getElementById('src-plugin')
 		let currentSource = 'Local'
 
-		// Preferences & Dialog
+		// Preferences & Dialogs
 		const prefDialog = document.getElementById('pref-dialog')
 		const btnPreferences = document.getElementById('btn-preferences')
 		const btnPrefClose = document.getElementById('btn-pref-close')
@@ -494,6 +534,41 @@
 		const prefTheme = document.getElementById('pref-theme')
 		const prefPauseEmoji = document.getElementById('pref-pause-emoji')
 		const prefPluginPort = document.getElementById('pref-plugin-port')
+
+		const logoutDialog = document.getElementById('logout-dialog')
+		const btnLogoutCancel = document.getElementById('btn-logout-cancel')
+		const btnLogoutConfirm = document.getElementById('btn-logout-confirm')
+
+		function checkAnyDialogOpen() {
+			const dialogs = [prefDialog, logoutDialog].filter(Boolean)
+			return dialogs.some(d => d.hasAttribute('open') || d.open)
+		}
+
+		function setupDialogBlur(dialogEl) {
+			if (!dialogEl) return
+			dialogEl.addEventListener('open', () => document.body.classList.add('dialog-open'))
+			dialogEl.addEventListener('opened', () => document.body.classList.add('dialog-open'))
+			dialogEl.addEventListener('close', () => {
+				document.body.classList.remove('dialog-open')
+			})
+			dialogEl.addEventListener('closed', () => {
+				document.body.classList.remove('dialog-open')
+			})
+			dialogEl.addEventListener('cancel', () => {
+				document.body.classList.remove('dialog-open')
+			})
+		}
+		setupDialogBlur(prefDialog)
+		setupDialogBlur(logoutDialog)
+
+		// MutationObserver as a fallback guarantee to remove blur when dialog open attribute is toggled off
+		const dialogObserver = new MutationObserver(() => {
+			if (!checkAnyDialogOpen()) {
+				document.body.classList.remove('dialog-open')
+			}
+		})
+		if (prefDialog) dialogObserver.observe(prefDialog, { attributes: true, attributeFilter: ['open'] })
+		if (logoutDialog) dialogObserver.observe(logoutDialog, { attributes: true, attributeFilter: ['open'] })
 
 		// Updater
 		const updaterStatusDesc = document.getElementById('updater-status-desc')
@@ -570,11 +645,17 @@
 			chip.addEventListener('click', () => insertPlaceholder(chip.label))
 		})
 
-		btnPreferences.addEventListener('click', () => prefDialog.show())
-		btnPrefClose.addEventListener('click', () => prefDialog.close())
+		btnPreferences.addEventListener('click', () => {
+			document.body.classList.add('dialog-open')
+			prefDialog.show()
+		})
+		btnPrefClose.addEventListener('click', () => {
+			prefDialog.close()
+			document.body.classList.remove('dialog-open')
+		})
 
 		prefTheme.addEventListener('change', async () => {
-			const theme = prefTheme.value
+			const theme = prefTheme.value || 'System'
 			updateTheme(theme)
 			await window.api.setTheme(theme)
 		})
@@ -602,6 +683,27 @@
 		}
 
 		document.getElementById('btn-verify-now').addEventListener('click', runVerification)
+
+		function updatePresenceStatus(status) {
+			if (!status) return
+			if (status.currentTrack && (status.currentTrack.title || status.currentTrack.artist)) {
+				const t = status.currentTrack
+				const display = t.artist && t.title ? `${t.artist} - ${t.title}` : (t.title || t.artist)
+				nowPlayingVal.textContent = t.isPlaying === false ? `${display} ⏸️` : display
+			} else {
+				nowPlayingVal.textContent = 'None'
+			}
+
+			if (status.lastWrittenText) {
+				serverAboutVal.textContent = status.lastWrittenText
+			}
+
+			if (status.isBackingOff && status.errorMessage) {
+				showWarning(`Warning: ${status.errorMessage}`)
+			} else if (!status.isBackingOff) {
+				clearWarning()
+			}
+		}
 
 		async function loadSettings() {
 			if (!window.api) return
@@ -634,6 +736,14 @@
 			updateCounter()
 			runVerification()
 
+			// Query presence status initially so Now Playing is immediately rendered
+			try {
+				const initialStatus = await window.api.getPresenceStatus()
+				if (initialStatus) {
+					updatePresenceStatus(initialStatus)
+				}
+			} catch (e) {}
+
 			// Query updater status
 			try {
 				const upStatus = await window.api.getUpdaterStatus()
@@ -653,7 +763,7 @@
 				updateEvery: Math.max(1, Math.min(60, interval)),
 				format,
 				source: currentSource,
-				theme: prefTheme.value,
+				theme: prefTheme.value || 'System',
 				startWithOS: Boolean(prefStartOs.selected),
 				appendPauseEmoji: Boolean(prefPauseEmoji.selected),
 				pluginPort
@@ -674,7 +784,7 @@
 				updateEveryInput.value = String(currentConfig.updateEvery)
 				formatTextInput.value = currentConfig.format
 				setSource('Local')
-				prefTheme.value = currentConfig.theme
+				prefTheme.value = currentConfig.theme || 'System'
 				updateTheme(currentConfig.theme)
 				prefStartOs.selected = currentConfig.startWithOS
 				prefPauseEmoji.selected = currentConfig.appendPauseEmoji
@@ -689,10 +799,21 @@
 			window.api?.exitApp()
 		})
 
-		document.getElementById('btn-logout').addEventListener('click', async () => {
-			if (confirm('Are you sure you want to unlink and log out of WhatsApp?')) {
-				await window.api.logoutWhatsApp()
-			}
+		// Unlink WhatsApp via MD3 Dialog
+		document.getElementById('btn-logout').addEventListener('click', () => {
+			document.body.classList.add('dialog-open')
+			logoutDialog.show()
+		})
+
+		btnLogoutCancel.addEventListener('click', () => {
+			logoutDialog.close()
+			document.body.classList.remove('dialog-open')
+		})
+
+		btnLogoutConfirm.addEventListener('click', async () => {
+			logoutDialog.close()
+			document.body.classList.remove('dialog-open')
+			await window.api.logoutWhatsApp()
 		})
 
 		// Updater event wiring
@@ -736,22 +857,7 @@
 
 		if (window.api) {
 			window.api.onPresenceStatus((status) => {
-				if (status.currentTrack) {
-					const t = status.currentTrack
-					nowPlayingVal.textContent = `${t.artist} - ${t.title}`
-				} else {
-					nowPlayingVal.textContent = 'None'
-				}
-
-				if (status.lastWrittenText) {
-					serverAboutVal.textContent = status.lastWrittenText
-				}
-
-				if (status.isBackingOff && status.errorMessage) {
-					showWarning(`Warning: ${status.errorMessage}`)
-				} else if (!status.isBackingOff) {
-					clearWarning()
-				}
+				updatePresenceStatus(status)
 			})
 
 			window.api.onConnectionStatus((status) => {

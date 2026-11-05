@@ -54,6 +54,7 @@ const whatsappClient = new WhatsAppClient()
 let presenceUpdater: PresenceUpdater | null = null
 
 let isQuitting = false
+let isLoggingOut = false
 let spotifySetupResolver: ((value: any) => void) | null = null
 
 function getIconPath(): string {
@@ -150,8 +151,8 @@ function createSettingsWindow() {
 	const appIcon = getAppIcon()
 
 	settingsWindow = new BrowserWindow({
-		width: 600,
-		height: 750,
+		width: 610,
+		height: 770,
 		resizable: false,
 		title: 'WAPresence',
 		icon: appIcon,
@@ -181,7 +182,7 @@ function createSettingsWindow() {
 	})
 
 	settingsWindow.on('close', (event) => {
-		if (!isQuitting) {
+		if (!isQuitting && !isLoggingOut) {
 			// Do NOT preventDefault! Allow window to destroy its renderer process
 			// to reclaim memory while running in the system tray.
 			log.info('Settings window closed; unloading renderer to save RAM')
@@ -222,7 +223,7 @@ function createSpotifyDialog(): Promise<any> {
 
 		spotifyDialog = new BrowserWindow({
 			width: 480,
-			height: 300,
+			height: 309,
 			resizable: false,
 			title: 'WAPresence - Spotify API Setup',
 			icon: appIcon,
@@ -313,18 +314,27 @@ function createTray() {
 }
 
 async function handleLogout() {
-	if (presenceUpdater) {
-		await presenceUpdater.stop()
-		presenceUpdater = null
-	}
+	isLoggingOut = true
+	try {
+		if (presenceUpdater) {
+			await presenceUpdater.stop()
+			presenceUpdater = null
+		}
 
-	await whatsappClient.logout()
+		await whatsappClient.logout()
 
-	if (settingsWindow && !settingsWindow.isDestroyed()) {
-		settingsWindow.close()
-		settingsWindow = null
+		if (settingsWindow && !settingsWindow.isDestroyed()) {
+			settingsWindow.close()
+			settingsWindow = null
+		}
+		createLoginWindow()
+		// Start connecting immediately so loginWindow gets fresh QR
+		whatsappClient.connect().catch((err) => {
+			log.error({ err }, 'Error connecting to WhatsApp post-logout')
+		})
+	} finally {
+		isLoggingOut = false
 	}
-	createLoginWindow()
 }
 
 async function gracefulExit() {
@@ -415,6 +425,10 @@ function setupIpcHandlers() {
 			return presenceUpdater.getAvailablePlaceholders()
 		}
 		return ['[artist]', '[title]', '[album]', '[tracknum]', '[bio]']
+	})
+
+	ipcMain.handle('presence:get-status', () => {
+		return presenceUpdater ? presenceUpdater.getStatus() : null
 	})
 
 	ipcMain.handle('updater:get-status', () => updaterService.getState())
@@ -524,6 +538,11 @@ function setupWhatsAppEvents() {
 		// Initialize presence updater loop
 		if (!presenceUpdater) {
 			presenceUpdater = new PresenceUpdater(whatsappClient, config)
+			presenceUpdater.on('status_updated', (status) => {
+				if (settingsWindow && !settingsWindow.isDestroyed()) {
+					settingsWindow.webContents.send('presence:status', status)
+				}
+			})
 			presenceUpdater.on('presence_updated', (data) => {
 				if (settingsWindow && !settingsWindow.isDestroyed()) {
 					settingsWindow.webContents.send('presence:status', presenceUpdater?.getStatus())
@@ -577,6 +596,9 @@ function setupWhatsAppEvents() {
 			settingsWindow = null
 		}
 		createLoginWindow()
+		whatsappClient.connect().catch((err) => {
+			log.error({ err }, 'Error connecting to WhatsApp post-logout')
+		})
 	})
 }
 

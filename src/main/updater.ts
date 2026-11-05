@@ -36,6 +36,7 @@ export class PresenceUpdater extends EventEmitter {
 	private lastVerification: VerificationResult | null = null
 	private lastErrorMessage: string | null = null
 	private isUpdating: boolean = false
+	private lastTrack: MediaTrackInfo | null = null
 
 	constructor(client: WhatsAppClient, config: AppConfig, customMediaSource?: IMediaSource) {
 		super()
@@ -70,7 +71,7 @@ export class PresenceUpdater extends EventEmitter {
 
 	public getStatus(): UpdaterStatus {
 		return {
-			currentTrack: null, // Will be queried dynamically
+			currentTrack: this.lastTrack,
 			lastWrittenText: this.lastWrittenText,
 			lastVerification: this.lastVerification,
 			isBackingOff: Date.now() < this.backoffUntil,
@@ -85,6 +86,11 @@ export class PresenceUpdater extends EventEmitter {
 		log.info('Starting presence update loop')
 
 		await this.mediaSource.start()
+		try {
+			this.lastTrack = await this.mediaSource.getCurrentTrack()
+		} catch (err) {
+			log.debug({ err }, 'Could not get initial track')
+		}
 
 		this.scheduleNextTick(0)
 	}
@@ -127,6 +133,7 @@ export class PresenceUpdater extends EventEmitter {
 
 		try {
 			const currentTrack = await this.mediaSource.getCurrentTrack()
+			this.lastTrack = currentTrack
 			const originalBio = this.client.getOriginalBio()
 
 			const targetText = formatMediaStatus(
@@ -144,6 +151,7 @@ export class PresenceUpdater extends EventEmitter {
 			if (!isTextChanged && !isNearExpiry) {
 				// Text has not changed and ephemeral duration is still fresh
 				this.emit('tick_skipped', { text: targetText, currentTrack })
+				this.emit('status_updated', this.getStatus())
 				return
 			}
 
@@ -165,6 +173,7 @@ export class PresenceUpdater extends EventEmitter {
 					currentTrack,
 					verification
 				})
+				this.emit('status_updated', this.getStatus())
 			} else {
 				// Verification failed: apply exponential backoff (2s, 4s, 8s, up to 30s)
 				const backoffDelay = Math.min(2000 * Math.pow(2, this.backoffAttempts), 30000)
@@ -187,6 +196,7 @@ export class PresenceUpdater extends EventEmitter {
 					verification,
 					backoffDelayMs: backoffDelay
 				})
+				this.emit('status_updated', this.getStatus())
 			}
 		} catch (err: any) {
 			const errMsg = err?.message || String(err)

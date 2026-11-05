@@ -8,6 +8,18 @@
 	<link rel="stylesheet" href="../index.css">
 	<script src="../md3.bundle.js"></script>
 	<style>
+		html, body {
+			overflow: hidden !important;
+			scrollbar-width: none !important;
+			-ms-overflow-style: none !important;
+		}
+
+		body::-webkit-scrollbar {
+			display: none !important;
+			width: 0 !important;
+			height: 0 !important;
+		}
+
 		body {
 			background: var(--md-sys-color-surface, #121413);
 			color: var(--md-sys-color-on-surface, #e1e3e1);

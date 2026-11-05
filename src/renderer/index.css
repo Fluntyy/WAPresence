@@ -91,6 +91,27 @@
 	box-sizing: border-box;
 	font-family: var(--md-ref-typeface-plain);
 	user-select: none;
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
+}
+
+/* Disable and hide all scrollbars globally */
+*::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+}
+
+html, body {
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
 }
 
 body, h1, h2, h3, h4, h5, h6, p, ul, ol {
