@@ -518,6 +518,12 @@ function setupIpcHandlers() {
 	ipcMain.handle('whatsapp:logout', async () => {
 		await handleLogout()
 	})
+
+	ipcMain.handle('app:open-external', (_, url: string) => {
+		if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+			shell.openExternal(url).catch((err) => log.warn({ err, url }, 'Failed to open external url'))
+		}
+	})
 }
 
 // WhatsApp client event bridging

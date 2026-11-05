@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('api', {
 	openSpotifySetup: () => ipcRenderer.invoke('spotify:open-setup'),
 	closeSpotifySetup: (confirmed, clientID, redirectURI) =>
 		ipcRenderer.invoke('spotify:close-setup', { confirmed, clientID, redirectURI }),
+	openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
 
 	getQrCode: () => ipcRenderer.invoke('whatsapp:get-qr'),
 	getPresenceStatus: () => ipcRenderer.invoke('presence:get-status'),

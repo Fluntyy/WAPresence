@@ -507,6 +507,33 @@
 		</div>
 	</md-dialog>
 
+	<!-- Plugin Source Warning Dialog -->
+	<md-dialog id="plugin-warning-dialog">
+		<div slot="headline" class="dialog-headline">
+			<span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">extension</span>
+			Plugin Media Source
+		</div>
+		<div slot="content" class="dialog-content-body" style="padding: 10px 28px 20px 28px; color: var(--md-sys-color-on-surface-variant); font-size: 13.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 14px;">
+			<div>
+				This source is intended for external applications, browser extensions, or mobile companion apps that push media info to WAPresence via its local HTTP webhook server.
+			</div>
+			<div>
+				Refer to the <a href="#" id="link-plugin-docs" style="color: var(--md-sys-color-primary); text-decoration: underline; font-weight: 600; cursor: pointer;">Plugin API Documentation (PLUGIN_API.md)</a> for endpoint details, JSON payloads, and integration examples.
+			</div>
+			<div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+				<md-checkbox id="chk-plugin-dont-show"></md-checkbox>
+				<label id="lbl-plugin-dont-show" style="font-size: 13px; color: var(--md-sys-color-on-surface); cursor: pointer; user-select: none;">Don't show this again</label>
+			</div>
+		</div>
+		<div slot="actions" class="dialog-actions">
+			<md-text-button id="btn-plugin-warning-cancel">Cancel</md-text-button>
+			<md-filled-button id="btn-plugin-warning-continue">
+				<span class="material-symbols-rounded" slot="icon">check</span>
+				Continue
+			</md-filled-button>
+		</div>
+	</md-dialog>
+
 	<script>
 		// Material Theme initialization
 		const SEED_COLOR = '#00a884'
@@ -561,8 +588,15 @@
 		const btnResetCancel = document.getElementById('btn-reset-cancel')
 		const btnResetConfirm = document.getElementById('btn-reset-confirm')
 
+		const pluginWarningDialog = document.getElementById('plugin-warning-dialog')
+		const btnPluginWarningCancel = document.getElementById('btn-plugin-warning-cancel')
+		const btnPluginWarningContinue = document.getElementById('btn-plugin-warning-continue')
+		const chkPluginDontShow = document.getElementById('chk-plugin-dont-show')
+		const lblPluginDontShow = document.getElementById('lbl-plugin-dont-show')
+		const linkPluginDocs = document.getElementById('link-plugin-docs')
+
 		function checkAnyDialogOpen() {
-			const dialogs = [prefDialog, logoutDialog, resetDialog].filter(Boolean)
+			const dialogs = [prefDialog, logoutDialog, resetDialog, pluginWarningDialog].filter(Boolean)
 			return dialogs.some(d => d.hasAttribute('open') || d.open)
 		}
 
@@ -583,6 +617,7 @@
 		setupDialogBlur(prefDialog)
 		setupDialogBlur(logoutDialog)
 		setupDialogBlur(resetDialog)
+		setupDialogBlur(pluginWarningDialog)
 
 		// MutationObserver as a fallback guarantee to remove blur when dialog open attribute is toggled off
 		const dialogObserver = new MutationObserver(() => {
@@ -593,6 +628,16 @@
 		if (prefDialog) dialogObserver.observe(prefDialog, { attributes: true, attributeFilter: ['open'] })
 		if (logoutDialog) dialogObserver.observe(logoutDialog, { attributes: true, attributeFilter: ['open'] })
 		if (resetDialog) dialogObserver.observe(resetDialog, { attributes: true, attributeFilter: ['open'] })
+		if (pluginWarningDialog) dialogObserver.observe(pluginWarningDialog, { attributes: true, attributeFilter: ['open'] })
+
+		linkPluginDocs.addEventListener('click', (e) => {
+			e.preventDefault()
+			window.api?.openExternal('https://github.com/Fluntyy/WAPresence/blob/master/PLUGIN_API.md')
+		})
+
+		lblPluginDontShow.addEventListener('click', () => {
+			chkPluginDontShow.checked = !chkPluginDontShow.checked
+		})
 
 		// Updater
 		const updaterStatusDesc = document.getElementById('updater-status-desc')
@@ -621,7 +666,32 @@
 		}
 
 		srcLocal.addEventListener('click', () => setSource('Local'))
-		srcPlugin.addEventListener('click', () => setSource('Plugin'))
+		srcPlugin.addEventListener('click', () => {
+			if (currentSource === 'Plugin') return
+			const isSuppressed = localStorage.getItem('wapresence_suppress_plugin_dialog') === 'true'
+			if (isSuppressed) {
+				setSource('Plugin')
+			} else {
+				chkPluginDontShow.checked = false
+				document.body.classList.add('dialog-open')
+				pluginWarningDialog.show()
+			}
+		})
+
+		btnPluginWarningCancel.addEventListener('click', () => {
+			pluginWarningDialog.close()
+			document.body.classList.remove('dialog-open')
+		})
+
+		btnPluginWarningContinue.addEventListener('click', () => {
+			if (chkPluginDontShow.checked) {
+				localStorage.setItem('wapresence_suppress_plugin_dialog', 'true')
+			}
+			pluginWarningDialog.close()
+			document.body.classList.remove('dialog-open')
+			setSource('Plugin')
+		})
+
 		srcSpotify.addEventListener('click', async () => {
 			setSource('Spotify')
 			if (!currentConfig.clientID || currentConfig.clientID.trim().length === 0) {
@@ -635,6 +705,30 @@
 			}
 		})
 
+		let hadUserFocus = false
+		let savedSelectionStart = null
+		let savedSelectionEnd = null
+
+		function updateCursorTracking() {
+			try {
+				if (typeof formatTextInput.selectionStart === 'number') {
+					savedSelectionStart = formatTextInput.selectionStart
+					savedSelectionEnd = formatTextInput.selectionEnd
+				}
+			} catch {}
+		}
+
+		formatTextInput.addEventListener('focus', () => {
+			hadUserFocus = true
+			updateCursorTracking()
+		})
+		formatTextInput.addEventListener('click', () => {
+			hadUserFocus = true
+			updateCursorTracking()
+		})
+		formatTextInput.addEventListener('keyup', updateCursorTracking)
+		formatTextInput.addEventListener('select', updateCursorTracking)
+
 		function updateCounter() {
 			const len = (formatTextInput.value || '').length
 			charCounter.textContent = `${len}/50`
@@ -645,12 +739,41 @@
 			}
 		}
 
-		formatTextInput.addEventListener('input', updateCounter)
+		formatTextInput.addEventListener('input', () => {
+			updateCursorTracking()
+			updateCounter()
+		})
 
 		function insertPlaceholder(p) {
-			const input = formatTextInput
-			const cur = input.value || ''
-			input.value = cur ? `${cur} ${p}` : p
+			const cur = formatTextInput.value || ''
+			let start = cur.length
+			let end = cur.length
+
+			if (hadUserFocus && typeof savedSelectionStart === 'number' && savedSelectionStart >= 0) {
+				start = Math.min(savedSelectionStart, cur.length)
+				end = typeof savedSelectionEnd === 'number' ? Math.min(savedSelectionEnd, cur.length) : start
+			}
+
+			const before = cur.slice(0, start)
+			const after = cur.slice(end)
+
+			// Detect if previous character has space; if it has (or at start of text), skip space insertion
+			const needLeadingSpace = before.length > 0 && before[before.length - 1] !== ' '
+			const toInsert = (needLeadingSpace ? ' ' : '') + p
+
+			const newText = before + toInsert + after
+			formatTextInput.value = newText
+
+			const newCursor = before.length + toInsert.length
+			savedSelectionStart = newCursor
+			savedSelectionEnd = newCursor
+			hadUserFocus = true
+
+			try {
+				formatTextInput.focus()
+				formatTextInput.setSelectionRange(newCursor, newCursor)
+			} catch {}
+
 			updateCounter()
 		}
 
@@ -697,7 +820,7 @@
 					showWarning(`Verification check failed: ${res.error}`)
 				} else {
 					serverAboutVal.textContent = res.text || '(empty)'
-					const timeStr = res.lastUpdateTime ? new Date(res.lastUpdateTime).toLocaleTimeString() : 'Just now'
+					const timeStr = new Date().toLocaleTimeString()
 					verifyResultText.textContent = `Verified at ${timeStr}`
 					clearWarning()
 				}
@@ -908,7 +1031,7 @@
 				} else {
 					clearWarning()
 					serverAboutVal.textContent = res.serverText || '(empty)'
-					const timeStr = res.lastUpdateTime ? new Date(res.lastUpdateTime).toLocaleTimeString() : 'Just now'
+					const timeStr = new Date().toLocaleTimeString()
 					verifyResultText.textContent = `Verified at ${timeStr}`
 				}
 			})
