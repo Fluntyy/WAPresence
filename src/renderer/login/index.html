@@ -27,21 +27,23 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: flex-start;
-			padding: 14px 18px 12px 18px;
+			min-height: 100vh;
+			padding: 18px 20px 16px 20px;
 			text-align: center;
 			margin: 0;
-			overflow: hidden;
+			overflow-x: hidden;
+			overflow-y: hidden;
 		}
 
 		.title-container {
 			display: flex;
 			align-items: center;
 			gap: 8px;
-			margin-bottom: 8px;
+			margin-bottom: 12px;
 		}
 
 		h1 {
-			font-size: 1.1rem;
+			font-size: 1.15rem;
 			font-weight: 700;
 			letter-spacing: -0.2px;
 			color: var(--md-sys-color-primary, #059669);
@@ -54,11 +56,11 @@
 			background: var(--md-sys-color-surface-container, #1e2220);
 			border: 1px solid var(--md-sys-color-outline-variant, #2e3532);
 			border-radius: 28px;
-			padding: 2px;
+			padding: 3px;
 			gap: 4px;
-			margin-bottom: 8px;
+			margin-bottom: 12px;
 			width: 100%;
-			max-width: 300px;
+			max-width: 310px;
 		}
 
 		.mode-btn {
@@ -71,8 +73,8 @@
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 			border: none;
 			border-radius: 24px;
-			padding: 5px 10px;
-			font-size: 0.78rem;
+			padding: 7px 12px;
+			font-size: 0.8rem;
 			font-weight: 500;
 			font-family: inherit;
 			cursor: pointer;
@@ -80,7 +82,7 @@
 		}
 
 		.mode-btn .material-symbols-rounded {
-			font-size: 16px;
+			font-size: 17px;
 		}
 
 		.mode-btn.active {
@@ -90,12 +92,12 @@
 		}
 
 		.instructions {
-			font-size: 0.76rem;
+			font-size: 0.8rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
-			margin: 0 0 10px 0;
-			line-height: 1.3;
-			max-width: 310px;
-			min-height: 28px;
+			margin: 0 0 14px 0;
+			line-height: 1.35;
+			max-width: 320px;
+			min-height: 32px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -104,7 +106,8 @@
 		/* ── Cards Area ── */
 		.card-container {
 			width: 100%;
-			max-width: 320px;
+			max-width: 330px;
+			min-height: 290px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -112,16 +115,16 @@
 
 		/* ── QR Card ── */
 		.qr-card {
-			width: 220px;
-			height: 220px;
+			width: 250px;
+			height: 250px;
 			background: var(--md-sys-color-surface-container, #202423);
 			border: 1px solid var(--md-sys-color-outline-variant, #404744);
-			border-radius: 16px;
+			border-radius: 20px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			overflow: hidden;
-			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 		}
 
 		#qr-image {
@@ -129,7 +132,7 @@
 			height: 100%;
 			object-fit: contain;
 			display: none;
-			padding: 8px;
+			padding: 10px;
 			background: white;
 		}
 
@@ -137,9 +140,9 @@
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 10px;
+			gap: 12px;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
-			font-size: 0.8rem;
+			font-size: 0.82rem;
 		}
 
 		/* ── Pairing Code Form Card ── */
@@ -147,24 +150,24 @@
 			width: 100%;
 			background: var(--md-sys-color-surface-container, #1b201e);
 			border: 1px solid var(--md-sys-color-outline-variant, #313a36);
-			border-radius: 16px;
-			padding: 14px 16px;
+			border-radius: 20px;
+			padding: 20px 18px;
 			display: flex;
 			flex-direction: column;
-			gap: 10px;
-			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+			gap: 14px;
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 			text-align: left;
 		}
 
 		.input-group {
 			display: flex;
 			flex-direction: column;
-			gap: 4px;
+			gap: 6px;
 			position: relative;
 		}
 
 		.input-label {
-			font-size: 0.7rem;
+			font-size: 0.72rem;
 			font-weight: 600;
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
@@ -179,14 +182,14 @@
 
 		.country-input {
 			width: 100%;
-			height: 38px;
+			height: 42px;
 			background: var(--md-sys-color-surface, #121413);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 8px;
-			padding: 0 30px 0 10px;
+			border-radius: 10px;
+			padding: 0 34px 0 12px;
 			color: var(--md-sys-color-on-surface, #e1e3e1);
 			font-family: inherit;
-			font-size: 0.82rem;
+			font-size: 0.85rem;
 			transition: border-color 0.15s ease;
 		}
 
@@ -194,30 +197,30 @@
 			outline: none;
 			border-color: var(--md-sys-color-primary, #059669);
 			border-width: 2px;
-			padding-left: 9px;
+			padding-left: 11px;
 		}
 
 		.country-select-box .arrow-icon {
 			position: absolute;
-			right: 8px;
+			right: 10px;
 			top: 50%;
 			transform: translateY(-50%);
 			pointer-events: none;
-			font-size: 18px;
+			font-size: 20px;
 			color: var(--md-sys-color-on-surface-variant, #8a918d);
 		}
 
 		/* Floating Dropdown List */
 		.country-dropdown {
 			position: absolute;
-			top: 42px;
+			top: 46px;
 			left: 0;
 			right: 0;
-			max-height: 150px;
+			max-height: 160px;
 			overflow-y: auto;
 			background: var(--md-sys-color-surface-container-high, #252b28);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 8px;
+			border-radius: 10px;
 			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 			z-index: 100;
 			display: none;
@@ -228,8 +231,8 @@
 		}
 
 		.country-option {
-			padding: 7px 10px;
-			font-size: 0.78rem;
+			padding: 8px 12px;
+			font-size: 0.8rem;
 			color: var(--md-sys-color-on-surface, #e1e3e1);
 			display: flex;
 			align-items: center;
@@ -245,28 +248,28 @@
 
 		.country-option .country-dial {
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.74rem;
+			font-size: 0.76rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 		}
 
 		/* Phone input with dashes */
 		.phone-input-row {
 			display: flex;
-			gap: 6px;
+			gap: 8px;
 			align-items: center;
 		}
 
 		.dial-prefix-badge {
-			height: 38px;
-			padding: 0 10px;
+			height: 42px;
+			padding: 0 12px;
 			background: var(--md-sys-color-surface-container-high, #252b28);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 8px;
+			border-radius: 10px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.82rem;
+			font-size: 0.85rem;
 			font-weight: 600;
 			color: var(--md-sys-color-primary, #059669);
 			white-space: nowrap;
@@ -274,14 +277,14 @@
 
 		.phone-input {
 			flex: 1;
-			height: 38px;
+			height: 42px;
 			background: var(--md-sys-color-surface, #121413);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 8px;
-			padding: 0 10px;
+			border-radius: 10px;
+			padding: 0 12px;
 			color: var(--md-sys-color-on-surface, #e1e3e1);
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.88rem;
+			font-size: 0.9rem;
 			letter-spacing: 0.5px;
 			transition: border-color 0.15s ease;
 		}
@@ -290,45 +293,45 @@
 			outline: none;
 			border-color: var(--md-sys-color-primary, #059669);
 			border-width: 2px;
-			padding-left: 9px;
+			padding-left: 11px;
 		}
 
 		/* Pairing code result state */
 		.code-result-box {
 			background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-surface));
 			border: 1px solid var(--md-sys-color-primary, #059669);
-			border-radius: 12px;
-			padding: 12px 10px;
+			border-radius: 14px;
+			padding: 16px 12px;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 10px;
+			gap: 12px;
 			text-align: center;
 		}
 
 		.code-result-title {
-			font-size: 0.74rem;
+			font-size: 0.76rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 		}
 
 		.code-display {
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 1.45rem;
+			font-size: 1.55rem;
 			font-weight: 800;
 			letter-spacing: 3px;
 			color: var(--md-sys-color-primary, #059669);
 			user-select: all;
-			padding: 3px 8px;
-			border-radius: 6px;
+			padding: 4px 10px;
+			border-radius: 8px;
 			background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
 		}
 
 		.code-steps {
-			font-size: 0.72rem;
+			font-size: 0.74rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
-			line-height: 1.35;
+			line-height: 1.4;
 			text-align: left;
-			padding: 0 4px;
+			padding: 0 6px;
 		}
 
 		.code-steps div {
@@ -340,26 +343,27 @@
 			border: 1px solid var(--md-sys-color-error);
 			color: var(--md-sys-color-error);
 			font-weight: 500;
-			font-size: 0.74rem;
-			border-radius: 6px;
-			padding: 5px 8px;
+			font-size: 0.75rem;
+			border-radius: 8px;
+			padding: 6px 10px;
 			display: none;
 		}
 
 		.status-footer {
-			margin-top: 12px;
-			font-size: 0.72rem;
+			margin-top: auto;
+			padding-top: 10px;
+			font-size: 0.78rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 5px;
+			gap: 6px;
 		}
 	</style>
 </head>
 <body>
 	<div class="title-container">
-		<img src="../assets/icon.png" alt="WAPresence" style="width: 24px; height: 24px; object-fit: contain; border-radius: 5px;">
+		<img src="../assets/icon.png" alt="WAPresence" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px;">
 		<h1>Log in to WhatsApp</h1>
 	</div>
 
@@ -391,7 +395,7 @@
 		<!-- Phone Pairing Code Mode View -->
 		<div id="view-phone" class="pairing-card" style="display: none;">
 			<!-- Input Form View -->
-			<div id="phone-form" style="display: flex; flex-direction: column; gap: 10px;">
+			<div id="phone-form" style="display: flex; flex-direction: column; gap: 12px;">
 				<div class="input-group">
 					<span class="input-label">Country</span>
 					<div class="country-select-box">
@@ -405,13 +409,13 @@
 					<span class="input-label">Phone Number</span>
 					<div class="phone-input-row">
 						<div id="dial-prefix-badge" class="dial-prefix-badge">+62</div>
-						<input type="text" id="phone-number" class="phone-input" placeholder="812-3456-7890" autocomplete="tel-national">
+						<input type="text" id="phone-number" class="phone-input" placeholder="812-3456-789" autocomplete="tel-national">
 					</div>
 				</div>
 
 				<div id="phone-error-banner" class="banner-error"></div>
 
-				<md-filled-button id="btn-request-code" style="width: 100%; margin-top: 2px;">
+				<md-filled-button id="btn-request-code" style="width: 100%; margin-top: 4px;">
 					<span class="material-symbols-rounded" slot="icon">key</span>
 					Get Pairing Code
 				</md-filled-button>
@@ -443,7 +447,7 @@
 
 	<!-- Fixed Footer (Always End-to-end encrypted session) -->
 	<div class="status-footer">
-		<span class="material-symbols-rounded" style="font-size: 15px;">lock</span>
+		<span class="material-symbols-rounded" style="font-size: 16px;">lock</span>
 		<span>End-to-end encrypted session</span>
 	</div>
 
@@ -455,7 +459,7 @@
 
 		// ── Comprehensive Country Directory ──
 		const COUNTRIES = [
-			{ name: 'Indonesia', dial: '62', code: 'ID', example: '811-123-456' },
+			{ name: 'Indonesia', dial: '62', code: 'ID', example: '812-3456-789' },
 			{ name: 'United States', dial: '1', code: 'US', example: '555-123-4567' },
 			{ name: 'United Kingdom', dial: '44', code: 'GB', example: '7911-123-456' },
 			{ name: 'India', dial: '91', code: 'IN', example: '98765-43210' },
@@ -541,7 +545,7 @@
 		function getFormatGroups(dial, length) {
 			// Indonesia (+62):
 			// 9 digits: 811-123-456 -> [3, 3, 3]
-			// 10 digits: 811-123-4567 -> [3, 3, 4]
+			// 10 digits: 812-3456-789 -> [3, 4, 3] (strictly 3-4-3 for 10 digits)
 			// 11 digits: 812-2345-6789 -> [3, 4, 4]
 			// 12 digits: 812-2345-67890 -> [3, 4, 5]
 			if (dial === '62') {
@@ -550,7 +554,7 @@
 				if (length === 7) return [3, 4]
 				if (length === 8) return [3, 3, 2]
 				if (length === 9) return [3, 3, 3]
-				if (length === 10) return [3, 3, 4]
+				if (length === 10) return [3, 4, 3]
 				if (length === 11) return [3, 4, 4]
 				return [3, 4, 5]
 			}
@@ -625,8 +629,7 @@
 			selectedCountry = country
 			countryInput.value = `${country.name} (+${country.dial})`
 			dialPrefixBadge.textContent = `+${country.dial}`
-			phoneInput.placeholder = country.example || '123-456-7890'
-			// Reformat current phone number with the new country dial code
+			phoneInput.placeholder = country.example || '123-456-789'
 			if (currentRawDigits) {
 				phoneInput.value = formatPhoneNumber(currentRawDigits, selectedCountry.dial)
 			}
@@ -649,8 +652,8 @@
 			countryDropdown.innerHTML = ''
 			if (matches.length === 0) {
 				const emptyEl = document.createElement('div')
-				emptyEl.style.padding = '8px 10px'
-				emptyEl.style.fontSize = '0.74rem'
+				emptyEl.style.padding = '8px 12px'
+				emptyEl.style.fontSize = '0.78rem'
 				emptyEl.style.color = 'var(--md-sys-color-on-surface-variant)'
 				emptyEl.textContent = 'No matching country'
 				countryDropdown.appendChild(emptyEl)
@@ -681,7 +684,6 @@
 			countryDropdown.classList.add('open')
 			renderDropdown(countryInput.value)
 
-			// If user directly types e.g. "+1" or "62", check exact dial match
 			const digitsOnly = countryInput.value.replace(/\D/g, '')
 			if (digitsOnly) {
 				const exact = COUNTRIES.find((c) => c.dial === digitsOnly)
@@ -694,7 +696,7 @@
 						name: 'Custom',
 						dial: digitsOnly,
 						code: 'XX',
-						example: '123-456-7890'
+						example: '123-456-789'
 					}
 				}
 				if (currentRawDigits) {
@@ -784,7 +786,6 @@
 				}
 
 				rawPairingCode = String(res.code || '').trim()
-				// Format 8-character code as "XXXX - XXXX" for readability
 				const cleanCode = rawPairingCode.replace(/[^A-Za-z0-9]/g, '')
 				if (cleanCode.length === 8) {
 					codeDisplay.textContent = `${cleanCode.slice(0, 4)} - ${cleanCode.slice(4)}`
