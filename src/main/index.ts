@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { loadConfig, saveConfig, resetConfig, AppConfig } from './config.js'
-import { getConfigPath } from './paths.js'
+import { getConfigPath, getAuthDir } from './paths.js'
 import { WhatsAppClient } from './whatsapp/client.js'
 import { PresenceUpdater } from './updater.js'
 import { SpotifySource } from './media/spotify.js'
@@ -134,7 +134,7 @@ function createLoginWindow() {
 
 	loginWindow = new BrowserWindow({
 		width: 390,
-		height: 505,
+		height: 530,
 		resizable: false,
 		title: 'WAPresence - Log in to WhatsApp',
 		icon: appIcon,
@@ -618,8 +618,14 @@ function setupIpcHandlers() {
 // WhatsApp client event bridging
 function setupWhatsAppEvents() {
 	whatsappClient.on('qr', (dataUrl: string) => {
+		if (settingsWindow && !settingsWindow.isDestroyed()) {
+			settingsWindow.close()
+			settingsWindow = null
+		}
 		if (!isLaunchedHidden) {
-			createLoginWindow()
+			if (!loginWindow || loginWindow.isDestroyed()) {
+				createLoginWindow()
+			}
 		}
 		if (loginWindow && !loginWindow.isDestroyed()) {
 			if (!loginWindow.webContents.isLoading()) {
@@ -635,9 +641,9 @@ function setupWhatsAppEvents() {
 		if (hadLoginWindow) {
 			loginWindow?.close()
 			loginWindow = null
-		}
-		if (hadLoginWindow && !isLaunchedHidden) {
-			createSettingsWindow()
+			if (!isLaunchedHidden) {
+				createSettingsWindow()
+			}
 		} else if (isLaunchedHidden) {
 			log.info('WAPresence started minimized with OS; staying in system tray')
 			isLaunchedHidden = false
@@ -785,9 +791,14 @@ app.whenReady().then(async () => {
 		setAutoStart(true)
 	}
 
+	const hasExistingAuth = fs.existsSync(path.join(getAuthDir(), 'creds.json'))
+
 	if (!isLaunchedHidden) {
-		// Open login window immediately so user sees loading state
-		createLoginWindow()
+		if (hasExistingAuth) {
+			createSettingsWindow()
+		} else {
+			createLoginWindow()
+		}
 	} else {
 		log.info('App launched minimized; starting silently in tray')
 	}

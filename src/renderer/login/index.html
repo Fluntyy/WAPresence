@@ -127,6 +127,11 @@
 			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 		}
 
+		.qr-card.hide-cursor,
+		.qr-card.hide-cursor * {
+			cursor: none !important;
+		}
+
 		#qr-image {
 			width: 100%;
 			height: 100%;
@@ -832,6 +837,30 @@
 					btnCopyLabel.textContent = 'Copy Code'
 				}, 2000)
 			}
+		})
+
+		// ── QR Cursor Auto-Hide on Hover ──
+		const qrCardEl = document.getElementById('view-qr')
+		let qrCursorTimer = null
+
+		function resetQrCursorTimer() {
+			qrCardEl.classList.remove('hide-cursor')
+			if (qrCursorTimer) {
+				clearTimeout(qrCursorTimer)
+			}
+			qrCursorTimer = setTimeout(() => {
+				qrCardEl.classList.add('hide-cursor')
+			}, 1000)
+		}
+
+		qrCardEl.addEventListener('mouseenter', resetQrCursorTimer)
+		qrCardEl.addEventListener('mousemove', resetQrCursorTimer)
+		qrCardEl.addEventListener('mouseleave', () => {
+			if (qrCursorTimer) {
+				clearTimeout(qrCursorTimer)
+				qrCursorTimer = null
+			}
+			qrCardEl.classList.remove('hide-cursor')
 		})
 
 		// ── QR Code Handling ──
