@@ -15,11 +15,22 @@ export function isAutoStartSupported(): boolean {
 
 export function getAutoStartStatus(): AutoStartStatus {
 	try {
-		const settings = app.getLoginItemSettings()
+		const isPackaged = app.isPackaged
+		const execPath = process.execPath
+		const args = isPackaged ? ['--hidden'] : [process.cwd(), '--hidden']
+
+		let settings = app.getLoginItemSettings({ path: execPath, args })
+		if (!settings.openAtLogin) {
+			const fallback = app.getLoginItemSettings({ path: execPath })
+			if (fallback.openAtLogin) {
+				settings = fallback
+			}
+		}
+
 		return {
 			openAtLogin: settings.openAtLogin,
 			executableWillLaunchAtLogin: Boolean(settings.executableWillLaunchAtLogin),
-			executablePath: process.execPath
+			executablePath: execPath
 		}
 	} catch (err) {
 		log.warn({ err }, 'Failed to query login item settings')

@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('api', {
 	openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
 
 	getQrCode: () => ipcRenderer.invoke('whatsapp:get-qr'),
+	requestPairingCode: (phoneNumber) =>
+		ipcRenderer.invoke('whatsapp:request-pairing-code', phoneNumber),
 	getPresenceStatus: () => ipcRenderer.invoke('presence:get-status'),
 
 	// Autostart & System Settings

@@ -810,7 +810,9 @@
 		})
 
 		prefStartOs.addEventListener('change', async () => {
-			await window.api.setAutostart(prefStartOs.selected)
+			const enabled = Boolean(prefStartOs.selected)
+			currentConfig.startWithOS = enabled
+			await window.api.setAutostart(enabled)
 		})
 
 		async function runVerification() {
@@ -874,7 +876,7 @@
 
 			try {
 				const autoStartStatus = await window.api.getAutostart()
-				prefStartOs.selected = Boolean(autoStartStatus && autoStartStatus.openAtLogin)
+				prefStartOs.selected = Boolean(currentConfig.startWithOS || (autoStartStatus && autoStartStatus.openAtLogin))
 			} catch (e) {
 				prefStartOs.selected = Boolean(currentConfig.startWithOS)
 			}

@@ -133,8 +133,8 @@ function createLoginWindow() {
 	const appIcon = getAppIcon()
 
 	loginWindow = new BrowserWindow({
-		width: 360,
-		height: 490,
+		width: 400,
+		height: 570,
 		resizable: false,
 		title: 'WAPresence - Log in to WhatsApp',
 		icon: appIcon,
@@ -477,7 +477,11 @@ function setupIpcHandlers() {
 	})
 
 	ipcMain.handle('autostart:get', () => {
-		return getAutoStartStatus()
+		const status = getAutoStartStatus()
+		return {
+			...status,
+			openAtLogin: status.openAtLogin || config.startWithOS
+		}
 	})
 
 	ipcMain.handle('autostart:set', (_, enabled: boolean) => {
@@ -529,6 +533,16 @@ function setupIpcHandlers() {
 
 	ipcMain.handle('whatsapp:get-qr', () => {
 		return whatsappClient.getLastQr()
+	})
+
+	ipcMain.handle('whatsapp:request-pairing-code', async (_, phoneNumber: string) => {
+		try {
+			const code = await whatsappClient.requestPairingCode(phoneNumber)
+			return { success: true, code }
+		} catch (err: any) {
+			log.error({ err, phoneNumber }, 'Failed to request pairing code')
+			return { success: false, error: err.message || 'Failed to request pairing code' }
+		}
 	})
 
 	ipcMain.handle('spotify:auth', async (_, { clientID, redirectURI }) => {
@@ -617,13 +631,14 @@ function setupWhatsAppEvents() {
 
 	whatsappClient.on('connected', async () => {
 		log.info('WhatsApp connected event received in main process')
-		if (loginWindow && !loginWindow.isDestroyed()) {
-			loginWindow.close()
+		const hadLoginWindow = Boolean(loginWindow && !loginWindow.isDestroyed())
+		if (hadLoginWindow) {
+			loginWindow?.close()
 			loginWindow = null
 		}
-		if (!isLaunchedHidden) {
+		if (hadLoginWindow && !isLaunchedHidden) {
 			createSettingsWindow()
-		} else {
+		} else if (isLaunchedHidden) {
 			log.info('WAPresence started minimized with OS; staying in system tray')
 			isLaunchedHidden = false
 		}
@@ -764,6 +779,11 @@ app.whenReady().then(async () => {
 	setupWhatsAppEvents()
 	setupUpdaterEvents()
 	createTray()
+
+	// Synchronize autostart with config on startup
+	if (config.startWithOS) {
+		setAutoStart(true)
+	}
 
 	if (!isLaunchedHidden) {
 		// Open login window immediately so user sees loading state

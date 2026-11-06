@@ -123,4 +123,15 @@ describe('WhatsAppClient verification logic', () => {
 		;(client as any).lastQrDataUrl = 'data:image/png;base64,test'
 		expect(client.getLastQr()).toBe('data:image/png;base64,test')
 	})
+
+	it('requests pairing code with cleaned phone number', async () => {
+		mockSocket.requestPairingCode = vi.fn().mockResolvedValue('ABCD1234')
+		const code = await client.requestPairingCode('+62 (812) 3456-7890')
+		expect(mockSocket.requestPairingCode).toHaveBeenCalledWith('6281234567890')
+		expect(code).toBe('ABCD1234')
+	})
+
+	it('throws error when phone number is too short or invalid', async () => {
+		await expect(client.requestPairingCode('123')).rejects.toThrow('too short')
+	})
 })

@@ -356,4 +356,42 @@ export class WhatsAppClient extends EventEmitter {
 		}
 		this.setState('idle')
 	}
+
+	/**
+	 * Requests an 8-digit pairing code from WhatsApp using phone number.
+	 * Phone number must be digits only including country code.
+	 */
+	public async requestPairingCode(phoneNumber: string): Promise<string> {
+		const cleaned = phoneNumber.replace(/[^0-9]/g, '')
+		if (!cleaned || cleaned.length < 7) {
+			throw new Error('Phone number is too short. Please enter a valid number including country code.')
+		}
+
+		if (!this.socket) {
+			await this.connect()
+		}
+
+		// If socket is still establishing connection, wait briefly for it to be ready
+		if (this.socket && this.state === 'connecting' && !this.lastQrDataUrl) {
+			await new Promise<void>((resolve) => {
+				const done = () => {
+					this.removeListener('qr', done)
+					this.removeListener('connected', done)
+					resolve()
+				}
+				this.once('qr', done)
+				this.once('connected', done)
+				setTimeout(done, 5000)
+			})
+		}
+
+		if (!this.socket || typeof this.socket.requestPairingCode !== 'function') {
+			throw new Error('WhatsApp connection is not ready yet. Please try again in a moment.')
+		}
+
+		log.info({ number: cleaned }, 'Requesting pairing code from WhatsApp')
+		const code = await this.socket.requestPairingCode(cleaned)
+		log.info({ code }, 'Pairing code received successfully')
+		return code
+	}
 }
