@@ -413,8 +413,8 @@
 				<div class="input-group">
 					<span class="input-label">Phone Number</span>
 					<div class="phone-input-row">
-						<div id="dial-prefix-badge" class="dial-prefix-badge">+62</div>
-						<input type="text" id="phone-number" class="phone-input" placeholder="812-3456-789" autocomplete="tel-national">
+						<div id="dial-prefix-badge" class="dial-prefix-badge">+</div>
+						<input type="text" id="phone-number" class="phone-input" placeholder="Phone number" autocomplete="tel-national">
 					</div>
 				</div>
 
@@ -519,7 +519,59 @@
 			{ name: 'Taiwan', dial: '886', code: 'TW', example: '912-345-678' }
 		]
 
-		let selectedCountry = COUNTRIES[0] // Default: Indonesia (+62)
+		// Detect user country from OS locale, browser settings, or timezone (never hard-coded)
+		function detectUserCountry() {
+			let regionCode = ''
+
+			// 1. Resolve from Intl.DateTimeFormat (uses OS system locale, e.g. 'en-ID' -> 'ID', 'en-US' -> 'US')
+			try {
+				const locale = Intl.DateTimeFormat().resolvedOptions().locale
+				if (locale) {
+					const loc = new Intl.Locale(locale)
+					if (loc.region) regionCode = loc.region.toUpperCase()
+				}
+			} catch {}
+
+			// 2. Fallback to navigator.language or navigator.languages
+			if (!regionCode) {
+				try {
+					const lang = navigator.language || (navigator.languages && navigator.languages[0]) || ''
+					const parts = lang.split(/[-_]/)
+					if (parts.length > 1) {
+						regionCode = parts[parts.length - 1].toUpperCase()
+					}
+				} catch {}
+			}
+
+			// 3. Fallback to timezone heuristics
+			if (!regionCode) {
+				try {
+					const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').toLowerCase()
+					if (tz.includes('jakarta') || tz.includes('makassar') || tz.includes('jayapura') || tz.includes('pontianak')) regionCode = 'ID'
+					else if (tz.includes('new_york') || tz.includes('chicago') || tz.includes('los_angeles') || tz.includes('denver')) regionCode = 'US'
+					else if (tz.includes('london')) regionCode = 'GB'
+					else if (tz.includes('kolkata') || tz.includes('calcutta')) regionCode = 'IN'
+					else if (tz.includes('sao_paulo')) regionCode = 'BR'
+					else if (tz.includes('berlin')) regionCode = 'DE'
+					else if (tz.includes('paris')) regionCode = 'FR'
+					else if (tz.includes('tokyo')) regionCode = 'JP'
+					else if (tz.includes('sydney') || tz.includes('melbourne')) regionCode = 'AU'
+					else if (tz.includes('toronto') || tz.includes('vancouver')) regionCode = 'CA'
+					else if (tz.includes('madrid')) regionCode = 'ES'
+					else if (tz.includes('rome')) regionCode = 'IT'
+				} catch {}
+			}
+
+			if (regionCode) {
+				const matched = COUNTRIES.find((c) => c.code === regionCode)
+				if (matched) return matched
+			}
+
+			// Default fallback: United States (+1)
+			return COUNTRIES.find((c) => c.code === 'US') || COUNTRIES[0]
+		}
+
+		let selectedCountry = detectUserCountry()
 		let currentRawDigits = ''
 		let rawPairingCode = ''
 

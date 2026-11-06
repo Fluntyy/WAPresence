@@ -78,7 +78,8 @@ export class WhatsAppClient extends EventEmitter {
 		this.socket = makeWASocket({
 			auth: state,
 			logger: baileysLogger,
-			syncFullHistory: false
+			syncFullHistory: false,
+			browser: ['WAPresence', 'Desktop', '1.1.0']
 		})
 
 		this.socket.ev.on('creds.update', saveCreds)
