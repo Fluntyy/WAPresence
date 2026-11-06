@@ -133,6 +133,7 @@ export class PresenceUpdater extends EventEmitter {
 
 		try {
 			const currentTrack = await this.mediaSource.getCurrentTrack()
+			if (!this.isRunning) return
 			this.lastTrack = currentTrack
 			const originalBio = this.client.getOriginalBio()
 
@@ -154,6 +155,8 @@ export class PresenceUpdater extends EventEmitter {
 				this.emit('status_updated', this.getStatus())
 				return
 			}
+
+			if (!this.isRunning) return
 
 			log.info({ targetText, isTextChanged, isNearExpiry }, 'Writing WhatsApp About text')
 
@@ -238,6 +241,13 @@ export class PresenceUpdater extends EventEmitter {
 		if (this.pollTimer) {
 			clearTimeout(this.pollTimer)
 			this.pollTimer = null
+		}
+
+		if (this.isUpdating) {
+			const start = Date.now()
+			while (this.isUpdating && Date.now() - start < 1500) {
+				await new Promise((resolve) => setTimeout(resolve, 50))
+			}
 		}
 
 		await this.mediaSource.stop()

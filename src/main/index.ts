@@ -172,6 +172,12 @@ function createLoginWindow() {
 		}
 	})
 
+	loginWindow.on('query-session-end', (event: Electron.WindowSessionEndEvent) => {
+		event.preventDefault()
+		log.info('OS session ending on loginWindow; running graceful exit')
+		gracefulExit()
+	})
+
 	loginWindow.on('closed', () => {
 		loginWindow = null
 		if (!settingsWindow && !isQuitting && whatsappClient.getState() !== 'connected') {
@@ -244,6 +250,12 @@ function createSettingsWindow() {
 				}).show()
 			}
 		}
+	})
+
+	settingsWindow.on('query-session-end', (event: Electron.WindowSessionEndEvent) => {
+		event.preventDefault()
+		log.info('OS session ending on settingsWindow; running graceful exit')
+		gracefulExit()
 	})
 
 	settingsWindow.on('closed', () => {
@@ -423,8 +435,9 @@ async function handleLogout() {
 async function gracefulExit() {
 	if (isQuitting) return
 	isQuitting = true
-	log.info('Initiating graceful shutdown')
+	log.info('Initiating graceful shutdown; prioritizing WhatsApp bio restoration')
 
+	// 1. Immediately stop presence update loop to prevent subsequent status overwrites
 	if (presenceUpdater) {
 		try {
 			await presenceUpdater.stop()
@@ -433,13 +446,34 @@ async function gracefulExit() {
 		}
 	}
 
+	// 2. Immediately restore original WhatsApp bio and disconnect client
 	try {
-		await whatsappClient.disconnect()
+		const disconnectPromise = whatsappClient.disconnect()
+		const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3500))
+		await Promise.race([disconnectPromise, timeoutPromise])
 	} catch (err) {
 		log.warn({ err }, 'Error disconnecting WhatsApp client')
 	}
 
-	app.quit()
+	// 3. Cleanly destroy UI elements and force fast exit
+	if (settingsWindow && !settingsWindow.isDestroyed()) {
+		settingsWindow.destroy()
+		settingsWindow = null
+	}
+	if (loginWindow && !loginWindow.isDestroyed()) {
+		loginWindow.destroy()
+		loginWindow = null
+	}
+	if (spotifyDialog && !spotifyDialog.isDestroyed()) {
+		spotifyDialog.destroy()
+		spotifyDialog = null
+	}
+	if (tray && !tray.isDestroyed()) {
+		tray.destroy()
+		tray = null
+	}
+
+	app.exit(0)
 }
 
 // IPC Handlers
@@ -821,10 +855,35 @@ app.on('window-all-closed', () => {
 	// Keep running in tray when windows are closed
 })
 
-process.on('SIGINT', () => {
-	gracefulExit()
+app.on('before-quit', (event: Electron.Event) => {
+	if (!isQuitting) {
+		event.preventDefault()
+		log.info('app before-quit event received; running graceful exit')
+		gracefulExit()
+	}
 })
 
-process.on('SIGTERM', () => {
-	gracefulExit()
+app.on('will-quit', (event: Electron.Event) => {
+	if (!isQuitting) {
+		event.preventDefault()
+		log.info('app will-quit event received; running graceful exit')
+		gracefulExit()
+	}
+})
+
+const terminationSignals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM', 'SIGBREAK', 'SIGHUP']
+terminationSignals.forEach((sig) => {
+	try {
+		process.on(sig, () => {
+			log.info({ sig }, 'Received termination signal; running graceful exit')
+			gracefulExit()
+		})
+	} catch {
+		// Ignore if signal not supported on this platform
+	}
+})
+
+process.on('uncaughtException', async (err) => {
+	log.error({ err }, 'Uncaught exception in main process; attempting emergency bio restore before exit')
+	await gracefulExit()
 })

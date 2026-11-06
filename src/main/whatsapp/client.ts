@@ -39,11 +39,13 @@ export class WhatsAppClient extends EventEmitter {
 	private reconnectAttempts: number = 0
 	private reconnectTimer: NodeJS.Timeout | null = null
 	private customAuthDir?: string
+	private customBioStorePath?: string
 	private lastQrDataUrl: string | null = null
 
-	constructor(customAuthDir?: string) {
+	constructor(customAuthDir?: string, customBioStorePath?: string) {
 		super()
 		this.customAuthDir = customAuthDir
+		this.customBioStorePath = customBioStorePath
 	}
 
 	public getState(): WhatsAppClientState {
@@ -133,7 +135,7 @@ export class WhatsAppClient extends EventEmitter {
 				if (isLoggedOut) {
 					this.setState('logged_out')
 					clearAuthState(this.customAuthDir)
-					clearBioRecord()
+					clearBioRecord(this.customBioStorePath)
 					this.emit('logged_out')
 				} else if (!this.isIntentionallyClosed) {
 					this.setState('disconnected')
@@ -167,27 +169,37 @@ export class WhatsAppClient extends EventEmitter {
 
 	/**
 	 * Reads original bio on login. If an un-restored bio from a previous crash exists,
-	 * retains that crash bio. Otherwise reads from server and records it.
+	 * retains that crash bio and immediately restores it to WhatsApp. Otherwise reads from server and records it.
 	 */
-	private async initializeBio(): Promise<void> {
+	public async initializeBio(): Promise<void> {
 		if (!this.ownJid || !this.socket) return
 
-		const savedRecord = loadBioRecord()
-		if (savedRecord && !savedRecord.restored && savedRecord.bio) {
-			log.warn({ bio: savedRecord.bio }, 'Found un-restored bio from previous crash session; retaining it')
+		const savedRecord = loadBioRecord(this.customBioStorePath)
+		if (savedRecord && !savedRecord.restored && typeof savedRecord.bio === 'string') {
+			log.warn(
+				{ bio: savedRecord.bio, savedAt: savedRecord.savedAt },
+				'Found un-restored bio from previous crash session; restoring original bio immediately'
+			)
 			this.originalBio = savedRecord.bio
+			try {
+				await this.restoreOriginalBio()
+			} catch (err) {
+				log.error({ err }, 'Failed to restore crash bio on startup')
+			}
+			// Re-arm bio record for this running session
+			saveOriginalBio(this.originalBio, this.customBioStorePath)
 			return
 		}
 
 		try {
 			const status = await this.fetchCurrentServerStatus()
 			this.originalBio = status?.text || ''
-			saveOriginalBio(this.originalBio)
+			saveOriginalBio(this.originalBio, this.customBioStorePath)
 			log.info({ originalBio: this.originalBio }, 'Original WhatsApp bio recorded on startup')
 		} catch (err) {
 			log.error({ err }, 'Failed to fetch initial WhatsApp About status from server')
 			this.originalBio = ''
-			saveOriginalBio('')
+			saveOriginalBio('', this.customBioStorePath)
 		}
 	}
 
@@ -294,12 +306,14 @@ export class WhatsAppClient extends EventEmitter {
 		}
 
 		log.info({ originalBio: this.originalBio }, 'Restoring original WhatsApp bio')
+		const safeBio = (this.originalBio || '').trim()
+		const hasText = safeBio.length > 0
 		try {
 			await this.socket.updateProfileAbout({
-				text: this.originalBio || null,
-				ephemeralDuration: this.originalBio ? 86400 : 0
+				text: hasText ? safeBio : null,
+				ephemeralDuration: hasText ? 86400 : 0
 			})
-			markBioRestored()
+			markBioRestored(this.customBioStorePath)
 			log.info('Original bio successfully restored')
 			return true
 		} catch (err) {
@@ -329,7 +343,7 @@ export class WhatsAppClient extends EventEmitter {
 		}
 
 		clearAuthState(this.customAuthDir)
-		clearBioRecord()
+		clearBioRecord(this.customBioStorePath)
 		this.setState('logged_out')
 		this.emit('logged_out')
 	}

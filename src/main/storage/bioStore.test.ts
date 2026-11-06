@@ -39,6 +39,15 @@ describe('bioStore', () => {
 		expect(record?.restored).toBe(true)
 	})
 
+	it('saves and loads empty string bio with restored=false', () => {
+		saveOriginalBio('', tempFile)
+		const record = loadBioRecord(tempFile)
+		expect(record).not.toBeNull()
+		expect(record?.bio).toBe('')
+		expect(record?.restored).toBe(false)
+		expect(record?.savedAt).toBeDefined()
+	})
+
 	it('clears bio record', () => {
 		saveOriginalBio('To be cleared', tempFile)
 		expect(fs.existsSync(tempFile)).toBe(true)

@@ -1,5 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+import os from 'node:os'
 import { WhatsAppClient } from './client.js'
+import { saveOriginalBio, loadBioRecord } from '../storage/bioStore.js'
 
 describe('WhatsAppClient verification logic', () => {
 	let client: WhatsAppClient
@@ -133,5 +137,119 @@ describe('WhatsAppClient verification logic', () => {
 
 	it('throws error when phone number is too short or invalid', async () => {
 		await expect(client.requestPairingCode('123')).rejects.toThrow('too short')
+	})
+})
+
+describe('WhatsAppClient bio crash recovery and restoration', () => {
+	let client: WhatsAppClient
+	let mockSocket: any
+	let tempDir: string
+	let tempBioFile: string
+
+	beforeEach(() => {
+		tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-client-bio-'))
+		tempBioFile = path.join(tempDir, 'original_bio.json')
+
+		client = new WhatsAppClient(undefined, tempBioFile)
+		mockSocket = {
+			user: { id: '123456789:0@s.whatsapp.net' },
+			updateProfileAbout: vi.fn().mockResolvedValue(undefined),
+			fetchTextStatus: vi.fn().mockResolvedValue([
+				{
+					id: '123456789@s.whatsapp.net',
+					text_status: {
+						text: 'Listening to HIVI - Pelangi',
+						emoji: undefined,
+						ephemeralDurationSeconds: 86400,
+						lastUpdateTime: new Date()
+					}
+				}
+			]),
+			logout: vi.fn().mockResolvedValue(undefined),
+			end: vi.fn()
+		}
+
+		;(client as any).socket = mockSocket
+		;(client as any).ownJid = '123456789@s.whatsapp.net'
+	})
+
+	afterEach(() => {
+		if (fs.existsSync(tempDir)) {
+			fs.rmSync(tempDir, { recursive: true, force: true })
+		}
+	})
+
+	it('immediately restores blank bio on restart after crash and avoids querying server for song status', async () => {
+		// Simulate crash: record exists with bio: "" and restored: false
+		saveOriginalBio('', tempBioFile)
+
+		await client.initializeBio()
+
+		// Must NOT query server since server still has the song from the crashed session
+		expect(mockSocket.fetchTextStatus).not.toHaveBeenCalled()
+		// Must restore blank bio to WhatsApp (null text, duration 0)
+		expect(mockSocket.updateProfileAbout).toHaveBeenCalledWith({
+			text: null,
+			ephemeralDuration: 0
+		})
+		expect(client.getOriginalBio()).toBe('')
+
+		// Must keep record saved for current active session
+		const record = loadBioRecord(tempBioFile)
+		expect(record?.bio).toBe('')
+		expect(record?.restored).toBe(false)
+	})
+
+	it('immediately restores custom text bio on restart after crash', async () => {
+		// Simulate crash: record exists with custom bio and restored: false
+		saveOriginalBio('Original Bio Before Crash', tempBioFile)
+
+		await client.initializeBio()
+
+		expect(mockSocket.fetchTextStatus).not.toHaveBeenCalled()
+		expect(mockSocket.updateProfileAbout).toHaveBeenCalledWith({
+			text: 'Original Bio Before Crash',
+			ephemeralDuration: 86400
+		})
+		expect(client.getOriginalBio()).toBe('Original Bio Before Crash')
+
+		const record = loadBioRecord(tempBioFile)
+		expect(record?.bio).toBe('Original Bio Before Crash')
+		expect(record?.restored).toBe(false)
+	})
+
+	it('queries server for bio on fresh session when no un-restored crash record exists', async () => {
+		// No record in tempBioFile
+		await client.initializeBio()
+
+		expect(mockSocket.fetchTextStatus).toHaveBeenCalledWith('123456789@s.whatsapp.net')
+		expect(client.getOriginalBio()).toBe('Listening to HIVI - Pelangi')
+
+		const record = loadBioRecord(tempBioFile)
+		expect(record?.bio).toBe('Listening to HIVI - Pelangi')
+		expect(record?.restored).toBe(false)
+	})
+
+	it('queries server for bio if previous session was cleanly restored', async () => {
+		saveOriginalBio('Cleanly Restored Bio', tempBioFile)
+		const current = loadBioRecord(tempBioFile)!
+		current.restored = true
+		fs.writeFileSync(tempBioFile, JSON.stringify(current), 'utf-8')
+
+		await client.initializeBio()
+
+		// Since previous session was cleanly restored, it reads fresh bio from server
+		expect(mockSocket.fetchTextStatus).toHaveBeenCalledWith('123456789@s.whatsapp.net')
+	})
+
+	it('restores bio cleanly with restoreOriginalBio()', async () => {
+		;(client as any).originalBio = 'Custom Bio'
+		const success = await client.restoreOriginalBio()
+
+		expect(success).toBe(true)
+		expect(mockSocket.updateProfileAbout).toHaveBeenCalledWith({
+			text: 'Custom Bio',
+			ephemeralDuration: 86400
+		})
 	})
 })
