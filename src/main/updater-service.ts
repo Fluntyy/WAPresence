@@ -37,7 +37,7 @@ export class UpdaterService extends EventEmitter {
 		checking: false,
 		updateAvailable: false,
 		updateDownloaded: false,
-		currentVersion: app.getVersion() || '1.0.0',
+		currentVersion: app.getVersion() || '1.1.0',
 		availableVersion: null,
 		releaseNotes: null,
 		downloadProgress: 0,
