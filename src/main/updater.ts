@@ -223,9 +223,7 @@ export class PresenceUpdater extends EventEmitter {
 			await this.mediaSource.stop()
 			this.mediaSource = createMediaSource(newConfig)
 			this.attachMediaSourceListeners()
-			if (this.isRunning) {
-				await this.mediaSource.start()
-			}
+			await this.mediaSource.start()
 		} else if (this.mediaSource instanceof SpotifySource) {
 			this.mediaSource.setPollInterval(newConfig.updateEvery)
 		}

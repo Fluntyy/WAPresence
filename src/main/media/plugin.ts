@@ -30,11 +30,11 @@ export class PluginSource extends EventEmitter implements IMediaSource {
 
 	constructor(port: number = 6970) {
 		super()
-		this.port = port
+		this.port = Number(port) || 6970
 	}
 
 	public setPort(port: number) {
-		this.port = port
+		this.port = Number(port) || 6970
 	}
 
 	public getPort(): number {
@@ -51,10 +51,16 @@ export class PluginSource extends EventEmitter implements IMediaSource {
 	}
 
 	public async start(): Promise<void> {
-		if (this.isRunning) return
+		if (this.isRunning && this.server) return
+
+		// Stop any lingering server before starting fresh
+		if (this.server) {
+			await this.stop()
+		}
+
 		this.isRunning = true
 
-		this.server = http.createServer((req, res) => {
+		const server = http.createServer((req, res) => {
 			// Allow CORS for browser extensions and companion clients
 			res.setHeader('Access-Control-Allow-Origin', '*')
 			res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -117,15 +123,44 @@ export class PluginSource extends EventEmitter implements IMediaSource {
 			res.end(JSON.stringify({ error: 'Not Found' }))
 		})
 
-		return new Promise((resolve) => {
-			this.server?.listen(this.port, '127.0.0.1', () => {
-				log.info({ port: this.port }, 'Plugin HTTP webhook server listening')
-				resolve()
-			})
+		this.server = server
 
-			this.server?.on('error', (err: any) => {
+		return new Promise<void>((resolve, reject) => {
+			let settled = false
+
+			const onError = (err: any) => {
 				log.error({ err, port: this.port }, 'Plugin HTTP server error')
-			})
+				if (!settled) {
+					settled = true
+					this.isRunning = false
+					try {
+						if (typeof server.closeAllConnections === 'function') {
+							server.closeAllConnections()
+						}
+						server.close()
+					} catch {}
+					this.server = null
+					reject(new Error(`Failed to bind Plugin HTTP server on port ${this.port}: ${err.message || String(err)}`))
+				}
+			}
+
+			server.once('error', onError)
+
+			try {
+				server.listen(this.port, '127.0.0.1', () => {
+					if (!settled) {
+						settled = true
+						log.info({ port: this.port }, 'Plugin HTTP webhook server listening')
+						server.removeListener('error', onError)
+						server.on('error', (err: any) => {
+							log.error({ err, port: this.port }, 'Plugin HTTP server runtime error')
+						})
+						resolve()
+					}
+				})
+			} catch (err: any) {
+				onError(err)
+			}
 		})
 	}
 
@@ -211,10 +246,23 @@ export class PluginSource extends EventEmitter implements IMediaSource {
 	public async stop(): Promise<void> {
 		this.isRunning = false
 		if (this.server) {
-			try {
-				this.server.close()
-			} catch {}
+			const srv = this.server
 			this.server = null
+			await new Promise<void>((resolve) => {
+				try {
+					if (typeof srv.closeAllConnections === 'function') {
+						srv.closeAllConnections()
+					}
+					srv.close((err) => {
+						if (err) {
+							log.debug({ err }, 'Plugin server close callback')
+						}
+						resolve()
+					})
+				} catch (err) {
+					resolve()
+				}
+			})
 		}
 		this.currentTrack = null
 	}

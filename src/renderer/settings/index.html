@@ -659,20 +659,49 @@
 			pluginPort: 6970
 		}
 
+		async function switchSource(src) {
+			currentSource = src
+			srcLocal.classList.toggle('active', src === 'Local')
+			srcSpotify.classList.toggle('active', src === 'Spotify')
+			srcPlugin.classList.toggle('active', src === 'Plugin')
+
+			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
+			sourceVal.textContent = src === 'Plugin' ? `Plugin (Port ${port})` : (src === 'Spotify' ? 'Spotify' : 'Local Media')
+
+			currentConfig.source = src
+			currentConfig.pluginPort = port
+
+			try {
+				const res = await window.api.saveConfig({
+					...currentConfig,
+					source: src,
+					pluginPort: port
+				})
+				if (res && !res.success) {
+					showWarning(res.error || 'Failed to switch media source')
+				} else {
+					clearWarning()
+				}
+			} catch (err) {
+				showWarning('Error switching media source')
+			}
+		}
+
 		function setSource(src) {
 			currentSource = src
 			srcLocal.classList.toggle('active', src === 'Local')
 			srcSpotify.classList.toggle('active', src === 'Spotify')
 			srcPlugin.classList.toggle('active', src === 'Plugin')
-			sourceVal.textContent = src === 'Plugin' ? `Plugin (Port ${prefPluginPort.value || 6970})` : (src === 'Spotify' ? 'Spotify' : 'Local Media')
+			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
+			sourceVal.textContent = src === 'Plugin' ? `Plugin (Port ${port})` : (src === 'Spotify' ? 'Spotify' : 'Local Media')
 		}
 
-		srcLocal.addEventListener('click', () => setSource('Local'))
+		srcLocal.addEventListener('click', () => switchSource('Local'))
 		srcPlugin.addEventListener('click', () => {
 			if (currentSource === 'Plugin') return
 			const isSuppressed = localStorage.getItem('wapresence_suppress_plugin_dialog') === 'true'
 			if (isSuppressed) {
-				setSource('Plugin')
+				switchSource('Plugin')
 			} else {
 				chkPluginDontShow.checked = false
 				document.body.classList.add('dialog-open')
@@ -691,20 +720,21 @@
 			}
 			pluginWarningDialog.close()
 			document.body.classList.remove('dialog-open')
-			setSource('Plugin')
+			switchSource('Plugin')
 		})
 
 		srcSpotify.addEventListener('click', async () => {
-			setSource('Spotify')
 			if (!currentConfig.clientID || currentConfig.clientID.trim().length === 0) {
 				const res = await window.api.openSpotifySetup()
 				if (!res || !res.confirmed) {
-					setSource('Local')
+					switchSource('Local')
+					return
 				} else {
 					currentConfig.clientID = res.clientID
 					currentConfig.redirectURI = res.redirectURI
 				}
 			}
+			switchSource('Spotify')
 		})
 
 		let hadUserFocus = false
@@ -798,9 +828,47 @@
 			document.body.classList.add('dialog-open')
 			prefDialog.show()
 		})
-		btnPrefClose.addEventListener('click', () => {
+		btnPrefClose.addEventListener('click', async () => {
 			prefDialog.close()
 			document.body.classList.remove('dialog-open')
+
+			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
+			currentConfig.pluginPort = port
+			if (currentSource === 'Plugin') {
+				sourceVal.textContent = `Plugin (Port ${port})`
+				await window.api.saveConfig({
+					...currentConfig,
+					source: currentSource,
+					pluginPort: port
+				})
+			}
+		})
+
+		prefPluginPort.addEventListener('change', async () => {
+			const port = parseInt(prefPluginPort.value, 10)
+			if (!isNaN(port) && port >= 1024 && port <= 65535) {
+				currentConfig.pluginPort = port
+				if (currentSource === 'Plugin') {
+					sourceVal.textContent = `Plugin (Port ${port})`
+					try {
+						const res = await window.api.saveConfig({
+							...currentConfig,
+							source: 'Plugin',
+							pluginPort: port
+						})
+						if (res && !res.success) {
+							showWarning(res.error || `Port ${port} could not be bound`)
+						} else {
+							clearWarning()
+						}
+					} catch (e) {
+						showWarning('Error updating plugin port')
+					}
+				}
+			} else {
+				prefPluginPort.value = String(currentConfig.pluginPort || 6970)
+				showWarning('Plugin port must be between 1024 and 65535')
+			}
 		})
 
 		prefTheme.addEventListener('change', async () => {
@@ -866,13 +934,13 @@
 
 			updateEveryInput.value = String(currentConfig.updateEvery)
 			formatTextInput.value = currentConfig.format || ''
+			prefPluginPort.value = String(currentConfig.pluginPort || 6970)
 			setSource(currentConfig.source || 'Local')
 
 			prefTheme.value = currentConfig.theme || 'System'
 			updateTheme(currentConfig.theme || 'System')
 
 			prefPauseEmoji.selected = currentConfig.appendPauseEmoji ?? true
-			prefPluginPort.value = String(currentConfig.pluginPort || 6970)
 
 			try {
 				const autoStartStatus = await window.api.getAutostart()

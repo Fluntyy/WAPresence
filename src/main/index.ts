@@ -615,6 +615,37 @@ function setupIpcHandlers() {
 	})
 }
 
+function initPresenceUpdater() {
+	if (!presenceUpdater) {
+		presenceUpdater = new PresenceUpdater(whatsappClient, config)
+		presenceUpdater.on('status_updated', (status) => {
+			if (settingsWindow && !settingsWindow.isDestroyed()) {
+				settingsWindow.webContents.send('presence:status', status)
+			}
+		})
+		presenceUpdater.on('presence_updated', (data) => {
+			if (settingsWindow && !settingsWindow.isDestroyed()) {
+				settingsWindow.webContents.send('presence:status', presenceUpdater?.getStatus())
+				settingsWindow.webContents.send('whatsapp:verification-result', data.verification)
+			}
+		})
+		presenceUpdater.on('verification_failed', (data) => {
+			if (settingsWindow && !settingsWindow.isDestroyed()) {
+				settingsWindow.webContents.send('presence:status', presenceUpdater?.getStatus())
+				settingsWindow.webContents.send('whatsapp:verification-result', data.verification)
+			}
+		})
+		presenceUpdater.on('placeholders_change', (placeholders) => {
+			if (settingsWindow && !settingsWindow.isDestroyed()) {
+				settingsWindow.webContents.send('plugin:placeholders', placeholders)
+			}
+		})
+		presenceUpdater.start().catch((err) => {
+			log.error({ err }, 'Error starting presence updater')
+		})
+	}
+}
+
 // WhatsApp client event bridging
 function setupWhatsAppEvents() {
 	whatsappClient.on('qr', (dataUrl: string) => {
@@ -653,34 +684,7 @@ function setupWhatsAppEvents() {
 		}
 
 		// Initialize presence updater loop
-		if (!presenceUpdater) {
-			presenceUpdater = new PresenceUpdater(whatsappClient, config)
-			presenceUpdater.on('status_updated', (status) => {
-				if (settingsWindow && !settingsWindow.isDestroyed()) {
-					settingsWindow.webContents.send('presence:status', status)
-				}
-			})
-			presenceUpdater.on('presence_updated', (data) => {
-				if (settingsWindow && !settingsWindow.isDestroyed()) {
-					settingsWindow.webContents.send('presence:status', presenceUpdater?.getStatus())
-					settingsWindow.webContents.send('whatsapp:verification-result', data.verification)
-				}
-			})
-			presenceUpdater.on('verification_failed', (data) => {
-				if (settingsWindow && !settingsWindow.isDestroyed()) {
-					settingsWindow.webContents.send('presence:status', presenceUpdater?.getStatus())
-					settingsWindow.webContents.send('whatsapp:verification-result', data.verification)
-				}
-			})
-			presenceUpdater.on('placeholders_change', (placeholders) => {
-				if (settingsWindow && !settingsWindow.isDestroyed()) {
-					settingsWindow.webContents.send('plugin:placeholders', placeholders)
-				}
-			})
-			presenceUpdater.start().catch((err) => {
-				log.error({ err }, 'Error starting presence updater')
-			})
-		}
+		initPresenceUpdater()
 
 		// Automatic "Verify now" verification after initial login
 		try {
@@ -785,6 +789,7 @@ app.whenReady().then(async () => {
 	setupWhatsAppEvents()
 	setupUpdaterEvents()
 	createTray()
+	initPresenceUpdater()
 
 	// Synchronize autostart with config on startup
 	if (config.startWithOS) {

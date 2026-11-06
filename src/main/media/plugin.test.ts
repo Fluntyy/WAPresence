@@ -75,4 +75,33 @@ describe('PluginSource', () => {
 		const clearedTrack = await plugin.getCurrentTrack()
 		expect(clearedTrack).toBeNull()
 	})
+
+	it('should cleanly stop and release port so another server can listen on same port', async () => {
+		const testPort = 18971
+		const p1 = new PluginSource(testPort)
+		await p1.start()
+		const res1 = await fetch(`http://127.0.0.1:${testPort}/api/status`)
+		expect(res1.status).toBe(200)
+
+		await p1.stop()
+
+		// Start second instance on exact same port immediately
+		const p2 = new PluginSource(testPort)
+		await p2.start()
+		const res2 = await fetch(`http://127.0.0.1:${testPort}/api/status`)
+		expect(res2.status).toBe(200)
+		await p2.stop()
+	})
+
+	it('should reject start promise if port is occupied rather than hanging', async () => {
+		const testPort = 18972
+		const p1 = new PluginSource(testPort)
+		await p1.start()
+
+		// Attempt to start p2 on same port while p1 is still listening
+		const p2 = new PluginSource(testPort)
+		await expect(p2.start()).rejects.toThrow(/EADDRINUSE|Failed to bind/)
+
+		await p1.stop()
+	})
 })
