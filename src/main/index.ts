@@ -133,8 +133,8 @@ function createLoginWindow() {
 	const appIcon = getAppIcon()
 
 	loginWindow = new BrowserWindow({
-		width: 400,
-		height: 570,
+		width: 380,
+		height: 485,
 		resizable: false,
 		title: 'WAPresence - Log in to WhatsApp',
 		icon: appIcon,

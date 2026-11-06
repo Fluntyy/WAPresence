@@ -27,23 +27,21 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: flex-start;
-			min-height: 100vh;
-			padding: 18px 20px 16px 20px;
+			padding: 14px 18px 12px 18px;
 			text-align: center;
 			margin: 0;
-			overflow-x: hidden;
-			overflow-y: hidden;
+			overflow: hidden;
 		}
 
 		.title-container {
 			display: flex;
 			align-items: center;
 			gap: 8px;
-			margin-bottom: 12px;
+			margin-bottom: 8px;
 		}
 
 		h1 {
-			font-size: 1.15rem;
+			font-size: 1.1rem;
 			font-weight: 700;
 			letter-spacing: -0.2px;
 			color: var(--md-sys-color-primary, #059669);
@@ -56,11 +54,11 @@
 			background: var(--md-sys-color-surface-container, #1e2220);
 			border: 1px solid var(--md-sys-color-outline-variant, #2e3532);
 			border-radius: 28px;
-			padding: 3px;
+			padding: 2px;
 			gap: 4px;
-			margin-bottom: 12px;
+			margin-bottom: 8px;
 			width: 100%;
-			max-width: 310px;
+			max-width: 300px;
 		}
 
 		.mode-btn {
@@ -73,8 +71,8 @@
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 			border: none;
 			border-radius: 24px;
-			padding: 7px 12px;
-			font-size: 0.8rem;
+			padding: 5px 10px;
+			font-size: 0.78rem;
 			font-weight: 500;
 			font-family: inherit;
 			cursor: pointer;
@@ -82,7 +80,7 @@
 		}
 
 		.mode-btn .material-symbols-rounded {
-			font-size: 17px;
+			font-size: 16px;
 		}
 
 		.mode-btn.active {
@@ -92,12 +90,12 @@
 		}
 
 		.instructions {
-			font-size: 0.8rem;
+			font-size: 0.76rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
-			margin: 0 0 14px 0;
-			line-height: 1.35;
-			max-width: 320px;
-			min-height: 32px;
+			margin: 0 0 10px 0;
+			line-height: 1.3;
+			max-width: 310px;
+			min-height: 28px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -106,8 +104,7 @@
 		/* ── Cards Area ── */
 		.card-container {
 			width: 100%;
-			max-width: 330px;
-			min-height: 290px;
+			max-width: 320px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -115,16 +112,16 @@
 
 		/* ── QR Card ── */
 		.qr-card {
-			width: 250px;
-			height: 250px;
+			width: 220px;
+			height: 220px;
 			background: var(--md-sys-color-surface-container, #202423);
 			border: 1px solid var(--md-sys-color-outline-variant, #404744);
-			border-radius: 20px;
+			border-radius: 16px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			overflow: hidden;
-			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 		}
 
 		#qr-image {
@@ -132,7 +129,7 @@
 			height: 100%;
 			object-fit: contain;
 			display: none;
-			padding: 10px;
+			padding: 8px;
 			background: white;
 		}
 
@@ -140,9 +137,9 @@
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 12px;
+			gap: 10px;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
-			font-size: 0.82rem;
+			font-size: 0.8rem;
 		}
 
 		/* ── Pairing Code Form Card ── */
@@ -150,24 +147,24 @@
 			width: 100%;
 			background: var(--md-sys-color-surface-container, #1b201e);
 			border: 1px solid var(--md-sys-color-outline-variant, #313a36);
-			border-radius: 20px;
-			padding: 20px 18px;
+			border-radius: 16px;
+			padding: 14px 16px;
 			display: flex;
 			flex-direction: column;
-			gap: 14px;
-			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+			gap: 10px;
+			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 			text-align: left;
 		}
 
 		.input-group {
 			display: flex;
 			flex-direction: column;
-			gap: 6px;
+			gap: 4px;
 			position: relative;
 		}
 
 		.input-label {
-			font-size: 0.72rem;
+			font-size: 0.7rem;
 			font-weight: 600;
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
@@ -182,14 +179,14 @@
 
 		.country-input {
 			width: 100%;
-			height: 42px;
+			height: 38px;
 			background: var(--md-sys-color-surface, #121413);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 10px;
-			padding: 0 34px 0 12px;
+			border-radius: 8px;
+			padding: 0 30px 0 10px;
 			color: var(--md-sys-color-on-surface, #e1e3e1);
 			font-family: inherit;
-			font-size: 0.85rem;
+			font-size: 0.82rem;
 			transition: border-color 0.15s ease;
 		}
 
@@ -197,30 +194,30 @@
 			outline: none;
 			border-color: var(--md-sys-color-primary, #059669);
 			border-width: 2px;
-			padding-left: 11px;
+			padding-left: 9px;
 		}
 
 		.country-select-box .arrow-icon {
 			position: absolute;
-			right: 10px;
+			right: 8px;
 			top: 50%;
 			transform: translateY(-50%);
 			pointer-events: none;
-			font-size: 20px;
+			font-size: 18px;
 			color: var(--md-sys-color-on-surface-variant, #8a918d);
 		}
 
 		/* Floating Dropdown List */
 		.country-dropdown {
 			position: absolute;
-			top: 46px;
+			top: 42px;
 			left: 0;
 			right: 0;
-			max-height: 160px;
+			max-height: 150px;
 			overflow-y: auto;
 			background: var(--md-sys-color-surface-container-high, #252b28);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 10px;
+			border-radius: 8px;
 			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 			z-index: 100;
 			display: none;
@@ -231,8 +228,8 @@
 		}
 
 		.country-option {
-			padding: 8px 12px;
-			font-size: 0.8rem;
+			padding: 7px 10px;
+			font-size: 0.78rem;
 			color: var(--md-sys-color-on-surface, #e1e3e1);
 			display: flex;
 			align-items: center;
@@ -241,36 +238,35 @@
 			transition: background 0.1s ease;
 		}
 
-		.country-option:hover,
-		.country-option.highlighted {
+		.country-option:hover {
 			background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
 			color: var(--md-sys-color-primary, #059669);
 		}
 
 		.country-option .country-dial {
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.76rem;
+			font-size: 0.74rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 		}
 
 		/* Phone input with dashes */
 		.phone-input-row {
 			display: flex;
-			gap: 8px;
+			gap: 6px;
 			align-items: center;
 		}
 
 		.dial-prefix-badge {
-			height: 42px;
-			padding: 0 12px;
+			height: 38px;
+			padding: 0 10px;
 			background: var(--md-sys-color-surface-container-high, #252b28);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 10px;
+			border-radius: 8px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.85rem;
+			font-size: 0.82rem;
 			font-weight: 600;
 			color: var(--md-sys-color-primary, #059669);
 			white-space: nowrap;
@@ -278,14 +274,14 @@
 
 		.phone-input {
 			flex: 1;
-			height: 42px;
+			height: 38px;
 			background: var(--md-sys-color-surface, #121413);
 			border: 1px solid var(--md-sys-color-outline, #5a635f);
-			border-radius: 10px;
-			padding: 0 12px;
+			border-radius: 8px;
+			padding: 0 10px;
 			color: var(--md-sys-color-on-surface, #e1e3e1);
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 0.9rem;
+			font-size: 0.88rem;
 			letter-spacing: 0.5px;
 			transition: border-color 0.15s ease;
 		}
@@ -294,45 +290,45 @@
 			outline: none;
 			border-color: var(--md-sys-color-primary, #059669);
 			border-width: 2px;
-			padding-left: 11px;
+			padding-left: 9px;
 		}
 
 		/* Pairing code result state */
 		.code-result-box {
 			background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-surface));
 			border: 1px solid var(--md-sys-color-primary, #059669);
-			border-radius: 14px;
-			padding: 16px 12px;
+			border-radius: 12px;
+			padding: 12px 10px;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 12px;
+			gap: 10px;
 			text-align: center;
 		}
 
 		.code-result-title {
-			font-size: 0.76rem;
+			font-size: 0.74rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 		}
 
 		.code-display {
 			font-family: 'JetBrains Mono', monospace;
-			font-size: 1.55rem;
+			font-size: 1.45rem;
 			font-weight: 800;
 			letter-spacing: 3px;
 			color: var(--md-sys-color-primary, #059669);
 			user-select: all;
-			padding: 4px 10px;
-			border-radius: 8px;
+			padding: 3px 8px;
+			border-radius: 6px;
 			background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
 		}
 
 		.code-steps {
-			font-size: 0.74rem;
+			font-size: 0.72rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
-			line-height: 1.4;
+			line-height: 1.35;
 			text-align: left;
-			padding: 0 6px;
+			padding: 0 4px;
 		}
 
 		.code-steps div {
@@ -344,26 +340,26 @@
 			border: 1px solid var(--md-sys-color-error);
 			color: var(--md-sys-color-error);
 			font-weight: 500;
-			font-size: 0.75rem;
-			border-radius: 8px;
-			padding: 6px 10px;
+			font-size: 0.74rem;
+			border-radius: 6px;
+			padding: 5px 8px;
 			display: none;
 		}
 
 		.status-footer {
-			margin-top: auto;
-			padding-top: 10px;
-			font-size: 0.74rem;
+			margin-top: 12px;
+			font-size: 0.72rem;
 			color: var(--md-sys-color-on-surface-variant, #a1a5a2);
 			display: flex;
 			align-items: center;
-			gap: 6px;
+			justify-content: center;
+			gap: 5px;
 		}
 	</style>
 </head>
 <body>
 	<div class="title-container">
-		<img src="../assets/icon.png" alt="WAPresence" style="width: 26px; height: 26px; object-fit: contain; border-radius: 6px;">
+		<img src="../assets/icon.png" alt="WAPresence" style="width: 24px; height: 24px; object-fit: contain; border-radius: 5px;">
 		<h1>Log in to WhatsApp</h1>
 	</div>
 
@@ -395,7 +391,7 @@
 		<!-- Phone Pairing Code Mode View -->
 		<div id="view-phone" class="pairing-card" style="display: none;">
 			<!-- Input Form View -->
-			<div id="phone-form" style="display: flex; flex-direction: column; gap: 12px;">
+			<div id="phone-form" style="display: flex; flex-direction: column; gap: 10px;">
 				<div class="input-group">
 					<span class="input-label">Country</span>
 					<div class="country-select-box">
@@ -415,7 +411,7 @@
 
 				<div id="phone-error-banner" class="banner-error"></div>
 
-				<md-filled-button id="btn-request-code" style="width: 100%; margin-top: 4px;">
+				<md-filled-button id="btn-request-code" style="width: 100%; margin-top: 2px;">
 					<span class="material-symbols-rounded" slot="icon">key</span>
 					Get Pairing Code
 				</md-filled-button>
@@ -445,9 +441,10 @@
 		</div>
 	</div>
 
+	<!-- Fixed Footer (Always End-to-end encrypted session) -->
 	<div class="status-footer">
 		<span class="material-symbols-rounded" style="font-size: 15px;">lock</span>
-		<span id="status-text">End-to-end encrypted session</span>
+		<span>End-to-end encrypted session</span>
 	</div>
 
 	<script>
@@ -456,61 +453,61 @@
 			window.applyMaterialTheme('#00a884', prefersDark)
 		}
 
-		// ── Comprehensive Country Directory with Dash Formatting Masks ──
+		// ── Comprehensive Country Directory ──
 		const COUNTRIES = [
-			{ name: 'Indonesia', dial: '62', code: 'ID', format: [3, 4, 4], example: '812-3456-7890' },
-			{ name: 'United States', dial: '1', code: 'US', format: [3, 3, 4], example: '555-123-4567' },
-			{ name: 'United Kingdom', dial: '44', code: 'GB', format: [4, 3, 3], example: '7911-123-456' },
-			{ name: 'India', dial: '91', code: 'IN', format: [5, 5], example: '98765-43210' },
-			{ name: 'Brazil', dial: '55', code: 'BR', format: [2, 5, 4], example: '11-98765-4321' },
-			{ name: 'Germany', dial: '49', code: 'DE', format: [3, 4, 4], example: '151-2345-6789' },
-			{ name: 'France', dial: '33', code: 'FR', format: [1, 2, 2, 2, 2], example: '6-12-34-56-78' },
-			{ name: 'Mexico', dial: '52', code: 'MX', format: [2, 4, 4], example: '55-1234-5678' },
-			{ name: 'Canada', dial: '1', code: 'CA', format: [3, 3, 4], example: '555-123-4567' },
-			{ name: 'Australia', dial: '61', code: 'AU', format: [3, 3, 3], example: '412-345-678' },
-			{ name: 'Spain', dial: '34', code: 'ES', format: [3, 3, 3], example: '612-345-678' },
-			{ name: 'Italy', dial: '39', code: 'IT', format: [3, 3, 4], example: '312-345-6789' },
-			{ name: 'Japan', dial: '81', code: 'JP', format: [2, 4, 4], example: '90-1234-5678' },
-			{ name: 'South Korea', dial: '82', code: 'KR', format: [2, 4, 4], example: '10-1234-5678' },
-			{ name: 'China', dial: '86', code: 'CN', format: [3, 4, 4], example: '138-1234-5678' },
-			{ name: 'Russia', dial: '7', code: 'RU', format: [3, 3, 2, 2], example: '912-345-67-89' },
-			{ name: 'Saudi Arabia', dial: '966', code: 'SA', format: [2, 3, 4], example: '50-123-4567' },
-			{ name: 'United Arab Emirates', dial: '971', code: 'AE', format: [2, 3, 4], example: '50-123-4567' },
-			{ name: 'Turkey', dial: '90', code: 'TR', format: [3, 3, 4], example: '532-123-4567' },
-			{ name: 'Netherlands', dial: '31', code: 'NL', format: [2, 3, 4], example: '61-234-5678' },
-			{ name: 'Argentina', dial: '54', code: 'AR', format: [2, 4, 4], example: '11-1234-5678' },
-			{ name: 'Colombia', dial: '57', code: 'CO', format: [3, 3, 4], example: '300-123-4567' },
-			{ name: 'Philippines', dial: '63', code: 'PH', format: [3, 3, 4], example: '917-123-4567' },
-			{ name: 'Pakistan', dial: '92', code: 'PK', format: [3, 7], example: '300-1234567' },
-			{ name: 'Nigeria', dial: '234', code: 'NG', format: [3, 3, 4], example: '802-123-4567' },
-			{ name: 'Egypt', dial: '20', code: 'EG', format: [2, 4, 4], example: '10-1234-5678' },
-			{ name: 'South Africa', dial: '27', code: 'ZA', format: [2, 3, 4], example: '82-123-4567' },
-			{ name: 'Vietnam', dial: '84', code: 'VN', format: [3, 3, 4], example: '912-345-678' },
-			{ name: 'Malaysia', dial: '60', code: 'MY', format: [2, 4, 4], example: '12-345-6789' },
-			{ name: 'Singapore', dial: '65', code: 'SG', format: [4, 4], example: '9123-4567' },
-			{ name: 'Thailand', dial: '66', code: 'TH', format: [2, 4, 4], example: '81-234-5678' },
-			{ name: 'Poland', dial: '48', code: 'PL', format: [3, 3, 3], example: '512-345-678' },
-			{ name: 'Ukraine', dial: '380', code: 'UA', format: [2, 3, 2, 2], example: '50-123-45-67' },
-			{ name: 'Sweden', dial: '46', code: 'SE', format: [2, 3, 2, 2], example: '70-123-45-67' },
-			{ name: 'Norway', dial: '47', code: 'NO', format: [3, 2, 3], example: '412-34-567' },
-			{ name: 'Denmark', dial: '45', code: 'DK', format: [2, 2, 2, 2], example: '20-12-34-56' },
-			{ name: 'Finland', dial: '358', code: 'FI', format: [2, 3, 2, 2], example: '40-123-45-67' },
-			{ name: 'Belgium', dial: '32', code: 'BE', format: [3, 2, 2, 2], example: '470-12-34-56' },
-			{ name: 'Switzerland', dial: '41', code: 'CH', format: [2, 3, 2, 2], example: '78-123-45-67' },
-			{ name: 'Austria', dial: '43', code: 'AT', format: [3, 4, 4], example: '664-123-4567' },
-			{ name: 'Portugal', dial: '351', code: 'PT', format: [3, 3, 3], example: '912-345-678' },
-			{ name: 'Greece', dial: '30', code: 'GR', format: [3, 3, 4], example: '691-234-5678' },
-			{ name: 'Ireland', dial: '353', code: 'IE', format: [2, 3, 4], example: '85-123-4567' },
-			{ name: 'New Zealand', dial: '64', code: 'NZ', format: [2, 3, 4], example: '21-123-4567' },
-			{ name: 'Chile', dial: '56', code: 'CL', format: [1, 4, 4], example: '9-1234-5678' },
-			{ name: 'Peru', dial: '51', code: 'PE', format: [3, 3, 3], example: '912-345-678' },
-			{ name: 'Bangladesh', dial: '880', code: 'BD', format: [4, 6], example: '1712-345678' },
-			{ name: 'Kenya', dial: '254', code: 'KE', format: [3, 3, 3], example: '712-345-678' },
-			{ name: 'Morocco', dial: '212', code: 'MA', format: [3, 6], example: '612-345678' },
-			{ name: 'Algeria', dial: '213', code: 'DZ', format: [2, 3, 4], example: '55-123-4567' },
-			{ name: 'Israel', dial: '972', code: 'IL', format: [2, 3, 4], example: '50-123-4567' },
-			{ name: 'Hong Kong', dial: '852', code: 'HK', format: [4, 4], example: '9123-4567' },
-			{ name: 'Taiwan', dial: '886', code: 'TW', format: [3, 3, 3], example: '912-345-678' }
+			{ name: 'Indonesia', dial: '62', code: 'ID', example: '811-123-456' },
+			{ name: 'United States', dial: '1', code: 'US', example: '555-123-4567' },
+			{ name: 'United Kingdom', dial: '44', code: 'GB', example: '7911-123-456' },
+			{ name: 'India', dial: '91', code: 'IN', example: '98765-43210' },
+			{ name: 'Brazil', dial: '55', code: 'BR', example: '11-98765-4321' },
+			{ name: 'Germany', dial: '49', code: 'DE', example: '151-2345-6789' },
+			{ name: 'France', dial: '33', code: 'FR', example: '6-12-34-56-78' },
+			{ name: 'Mexico', dial: '52', code: 'MX', example: '55-1234-5678' },
+			{ name: 'Canada', dial: '1', code: 'CA', example: '555-123-4567' },
+			{ name: 'Australia', dial: '61', code: 'AU', example: '412-345-678' },
+			{ name: 'Spain', dial: '34', code: 'ES', example: '612-345-678' },
+			{ name: 'Italy', dial: '39', code: 'IT', example: '312-345-6789' },
+			{ name: 'Japan', dial: '81', code: 'JP', example: '90-1234-5678' },
+			{ name: 'South Korea', dial: '82', code: 'KR', example: '10-1234-5678' },
+			{ name: 'China', dial: '86', code: 'CN', example: '138-1234-5678' },
+			{ name: 'Russia', dial: '7', code: 'RU', example: '912-345-67-89' },
+			{ name: 'Saudi Arabia', dial: '966', code: 'SA', example: '50-123-4567' },
+			{ name: 'United Arab Emirates', dial: '971', code: 'AE', example: '50-123-4567' },
+			{ name: 'Turkey', dial: '90', code: 'TR', example: '532-123-4567' },
+			{ name: 'Netherlands', dial: '31', code: 'NL', example: '61-234-5678' },
+			{ name: 'Argentina', dial: '54', code: 'AR', example: '11-1234-5678' },
+			{ name: 'Colombia', dial: '57', code: 'CO', example: '300-123-4567' },
+			{ name: 'Philippines', dial: '63', code: 'PH', example: '917-123-4567' },
+			{ name: 'Pakistan', dial: '92', code: 'PK', example: '300-1234567' },
+			{ name: 'Nigeria', dial: '234', code: 'NG', example: '802-123-4567' },
+			{ name: 'Egypt', dial: '20', code: 'EG', example: '10-1234-5678' },
+			{ name: 'South Africa', dial: '27', code: 'ZA', example: '82-123-4567' },
+			{ name: 'Vietnam', dial: '84', code: 'VN', example: '912-345-678' },
+			{ name: 'Malaysia', dial: '60', code: 'MY', example: '12-345-6789' },
+			{ name: 'Singapore', dial: '65', code: 'SG', example: '9123-4567' },
+			{ name: 'Thailand', dial: '66', code: 'TH', example: '81-234-5678' },
+			{ name: 'Poland', dial: '48', code: 'PL', example: '512-345-678' },
+			{ name: 'Ukraine', dial: '380', code: 'UA', example: '50-123-45-67' },
+			{ name: 'Sweden', dial: '46', code: 'SE', example: '70-123-45-67' },
+			{ name: 'Norway', dial: '47', code: 'NO', example: '412-34-567' },
+			{ name: 'Denmark', dial: '45', code: 'DK', example: '20-12-34-56' },
+			{ name: 'Finland', dial: '358', code: 'FI', example: '40-123-45-67' },
+			{ name: 'Belgium', dial: '32', code: 'BE', example: '470-12-34-56' },
+			{ name: 'Switzerland', dial: '41', code: 'CH', example: '78-123-45-67' },
+			{ name: 'Austria', dial: '43', code: 'AT', example: '664-123-4567' },
+			{ name: 'Portugal', dial: '351', code: 'PT', example: '912-345-678' },
+			{ name: 'Greece', dial: '30', code: 'GR', example: '691-234-5678' },
+			{ name: 'Ireland', dial: '353', code: 'IE', example: '85-123-4567' },
+			{ name: 'New Zealand', dial: '64', code: 'NZ', example: '21-123-4567' },
+			{ name: 'Chile', dial: '56', code: 'CL', example: '9-1234-5678' },
+			{ name: 'Peru', dial: '51', code: 'PE', example: '912-345-678' },
+			{ name: 'Bangladesh', dial: '880', code: 'BD', example: '1712-345678' },
+			{ name: 'Kenya', dial: '254', code: 'KE', example: '712-345-678' },
+			{ name: 'Morocco', dial: '212', code: 'MA', example: '612-345678' },
+			{ name: 'Algeria', dial: '213', code: 'DZ', example: '55-123-4567' },
+			{ name: 'Israel', dial: '972', code: 'IL', example: '50-123-4567' },
+			{ name: 'Hong Kong', dial: '852', code: 'HK', example: '9123-4567' },
+			{ name: 'Taiwan', dial: '886', code: 'TW', example: '912-345-678' }
 		]
 
 		let selectedCountry = COUNTRIES[0] // Default: Indonesia (+62)
@@ -525,7 +522,6 @@
 		const instructionsText = document.getElementById('instructions-text')
 		const qrImageEl = document.getElementById('qr-image')
 		const loadingEl = document.getElementById('loading')
-		const statusText = document.getElementById('status-text')
 
 		const countryInput = document.getElementById('country-input')
 		const countryDropdown = document.getElementById('country-dropdown')
@@ -541,17 +537,80 @@
 		const btnCopyLabel = document.getElementById('btn-copy-label')
 		const btnRetryPhone = document.getElementById('btn-retry-phone')
 
-		// ── Formatting Helper ──
-		function formatPhoneNumber(digits, formatGroups) {
-			if (!digits) return ''
-			if (!formatGroups || !formatGroups.length) {
-				if (digits.length <= 8) formatGroups = [4, 4]
-				else if (digits.length <= 10) formatGroups = [3, 3, 4]
-				else formatGroups = [3, 4, 4]
+		// ── Dynamic Length-Aware Dash Grouping ──
+		function getFormatGroups(dial, length) {
+			// Indonesia (+62):
+			// 9 digits: 811-123-456 -> [3, 3, 3]
+			// 10 digits: 811-123-4567 -> [3, 3, 4]
+			// 11 digits: 812-2345-6789 -> [3, 4, 4]
+			// 12 digits: 812-2345-67890 -> [3, 4, 5]
+			if (dial === '62') {
+				if (length <= 3) return [3]
+				if (length <= 6) return [3, 3]
+				if (length === 7) return [3, 4]
+				if (length === 8) return [3, 3, 2]
+				if (length === 9) return [3, 3, 3]
+				if (length === 10) return [3, 3, 4]
+				if (length === 11) return [3, 4, 4]
+				return [3, 4, 5]
 			}
+
+			// United States / Canada (+1):
+			if (dial === '1') {
+				if (length <= 7) return [3, 4]
+				return [3, 3, 4]
+			}
+
+			// United Kingdom (+44):
+			if (dial === '44') {
+				if (length <= 7) return [4, 3]
+				if (length === 8) return [4, 4]
+				if (length === 9) return [3, 3, 3]
+				return [4, 3, 3]
+			}
+
+			// Brazil (+55):
+			if (dial === '55') {
+				if (length <= 10) return [2, 4, 4]
+				return [2, 5, 4]
+			}
+
+			// India (+91):
+			if (dial === '91') {
+				if (length <= 5) return [5]
+				return [5, 5]
+			}
+
+			// Japan (+81):
+			if (dial === '81') {
+				if (length <= 9) return [2, 3, 4]
+				return [2, 4, 4]
+			}
+
+			// Germany (+49):
+			if (dial === '49') {
+				if (length <= 8) return [4, 4]
+				if (length === 9) return [3, 3, 3]
+				if (length === 10) return [3, 3, 4]
+				return [3, 4, 4]
+			}
+
+			// Smart generic fallback by number length
+			if (length <= 6) return [3, 3]
+			if (length === 7) return [3, 4]
+			if (length === 8) return [4, 4]
+			if (length === 9) return [3, 3, 3]
+			if (length === 10) return [3, 3, 4]
+			if (length === 11) return [3, 4, 4]
+			return [3, 4, 5]
+		}
+
+		function formatPhoneNumber(digits, dial) {
+			if (!digits) return ''
+			const groups = getFormatGroups(dial, digits.length)
 			const parts = []
 			let idx = 0
-			for (const len of formatGroups) {
+			for (const len of groups) {
 				if (idx >= digits.length) break
 				parts.push(digits.slice(idx, idx + len))
 				idx += len
@@ -567,9 +626,9 @@
 			countryInput.value = `${country.name} (+${country.dial})`
 			dialPrefixBadge.textContent = `+${country.dial}`
 			phoneInput.placeholder = country.example || '123-456-7890'
-			// Reformat current phone number
+			// Reformat current phone number with the new country dial code
 			if (currentRawDigits) {
-				phoneInput.value = formatPhoneNumber(currentRawDigits, selectedCountry.format)
+				phoneInput.value = formatPhoneNumber(currentRawDigits, selectedCountry.dial)
 			}
 		}
 
@@ -590,8 +649,8 @@
 			countryDropdown.innerHTML = ''
 			if (matches.length === 0) {
 				const emptyEl = document.createElement('div')
-				emptyEl.style.padding = '10px 12px'
-				emptyEl.style.fontSize = '0.78rem'
+				emptyEl.style.padding = '8px 10px'
+				emptyEl.style.fontSize = '0.74rem'
 				emptyEl.style.color = 'var(--md-sys-color-on-surface-variant)'
 				emptyEl.textContent = 'No matching country'
 				countryDropdown.appendChild(emptyEl)
@@ -635,9 +694,11 @@
 						name: 'Custom',
 						dial: digitsOnly,
 						code: 'XX',
-						format: [3, 4, 4],
 						example: '123-456-7890'
 					}
+				}
+				if (currentRawDigits) {
+					phoneInput.value = formatPhoneNumber(currentRawDigits, selectedCountry.dial)
 				}
 			}
 		})
@@ -663,7 +724,7 @@
 			}, 150)
 		})
 
-		// ── Phone Input Dash Auto-Formatting ──
+		// ── Phone Input Dynamic Dash Formatting ──
 		phoneInput.addEventListener('input', () => {
 			let digits = phoneInput.value.replace(/\D/g, '')
 			// Strip international redundant leading zero (e.g. 0812 -> 812)
@@ -671,7 +732,8 @@
 				digits = digits.slice(1)
 			}
 			currentRawDigits = digits
-			phoneInput.value = formatPhoneNumber(digits, selectedCountry.format)
+			const dial = selectedCountry ? selectedCountry.dial : '62'
+			phoneInput.value = formatPhoneNumber(digits, dial)
 			phoneErrorBanner.style.display = 'none'
 		})
 
@@ -722,7 +784,7 @@
 				}
 
 				rawPairingCode = String(res.code || '').trim()
-				// Format 8-character code as "XXXX - XXXX" for clarity
+				// Format 8-character code as "XXXX - XXXX" for readability
 				const cleanCode = rawPairingCode.replace(/[^A-Za-z0-9]/g, '')
 				if (cleanCode.length === 8) {
 					codeDisplay.textContent = `${cleanCode.slice(0, 4)} - ${cleanCode.slice(4)}`
@@ -732,7 +794,7 @@
 
 				phoneForm.style.display = 'none'
 				phoneResult.style.display = 'flex'
-				statusText.textContent = 'Waiting for phone confirmation...'
+				instructionsText.textContent = 'Enter the pairing code below on your phone.'
 			} catch (err) {
 				phoneErrorBanner.textContent = err.message || 'Error requesting pairing code'
 				phoneErrorBanner.style.display = 'block'
@@ -745,7 +807,7 @@
 		btnRetryPhone.addEventListener('click', () => {
 			phoneResult.style.display = 'none'
 			phoneForm.style.display = 'flex'
-			statusText.textContent = 'End-to-end encrypted session'
+			instructionsText.textContent = 'Link with phone number instead. Enter the pairing code on your phone.'
 			phoneInput.focus()
 		})
 
@@ -758,7 +820,6 @@
 					btnCopyLabel.textContent = 'Copy Code'
 				}, 2000)
 			} catch {
-				// Fallback
 				const textarea = document.createElement('textarea')
 				textarea.value = cleanCode
 				document.body.appendChild(textarea)
@@ -778,9 +839,6 @@
 			qrImageEl.src = dataUrl
 			qrImageEl.style.display = 'block'
 			loadingEl.style.display = 'none'
-			if (tabQr.classList.contains('active')) {
-				statusText.textContent = 'Scan code with WhatsApp'
-			}
 		}
 
 		if (window.api) {
@@ -790,11 +848,9 @@
 
 			window.api.onConnectionStatus((status) => {
 				if (status === 'connecting') {
-					statusText.textContent = 'Connecting to WhatsApp servers...'
+					instructionsText.textContent = 'Connecting to WhatsApp servers...'
 				} else if (status === 'connected') {
-					statusText.textContent = 'Connected! Opening dashboard...'
-				} else if (status === 'qr') {
-					statusText.textContent = 'Scan code with WhatsApp'
+					instructionsText.textContent = 'Connected! Opening dashboard...'
 				}
 			})
 
