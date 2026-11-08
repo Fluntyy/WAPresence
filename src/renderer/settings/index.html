@@ -1010,25 +1010,45 @@
 			await window.api.setAutostart(enabled)
 		})
 
-		async function runVerification() {
+		async function runVerification(isManual = false) {
+			const currentStatus = (waStatusVal.textContent || '').trim().toLowerCase()
+			if (currentStatus !== 'connected') {
+				if (isManual) {
+					showSnackbar('WhatsApp client is not connected yet', 'Dismiss')
+					verifyResultText.textContent = 'Not connected'
+				} else {
+					verifyResultText.textContent = 'Waiting for connection...'
+				}
+				return
+			}
+
 			verifyResultText.textContent = 'Verifying...'
 			try {
 				const res = await window.api.verifyNow()
 				if (res.error) {
 					verifyResultText.textContent = 'Error: ' + res.error
-					showWarning(`Verification check failed: ${res.error}`)
+					if (isManual) {
+						showSnackbar(`Verification check failed: ${res.error}`, 'Dismiss')
+					}
 				} else {
 					serverAboutVal.textContent = res.text || '(empty)'
 					const timeStr = new Date().toLocaleTimeString()
 					verifyResultText.textContent = `Verified at ${timeStr}`
-					clearWarning()
+					if (isManual) {
+						showSnackbar(`Verified server bio: "${res.text || '(empty)'}"`, 'Dismiss')
+					}
 				}
 			} catch (err) {
 				verifyResultText.textContent = 'Error verifying'
+				if (isManual) {
+					showSnackbar('Error verifying WhatsApp bio', 'Dismiss')
+				}
 			}
 		}
 
-		document.getElementById('btn-verify-now').addEventListener('click', runVerification)
+		document.getElementById('btn-verify-now').addEventListener('click', () => {
+			runVerification(true)
+		})
 
 		function updatePresenceStatus(status) {
 			if (!status) return
@@ -1105,7 +1125,14 @@
 			} catch {}
 
 			updateCounter()
-			runVerification()
+			verifyResultText.textContent = 'Waiting for connection...'
+
+			// Delay initial verification so connection and session have time to initialize
+			setTimeout(() => {
+				if ((waStatusVal.textContent || '').trim().toLowerCase() === 'connected') {
+					runVerification(false)
+				}
+			}, 3000)
 
 			// Query presence status initially so Now Playing is immediately rendered
 			try {
@@ -1297,13 +1324,18 @@
 			window.api.onConnectionStatus((status) => {
 				waStatusVal.textContent = status
 				if (status === 'connected') {
-					runVerification()
+					// Delay verification after connection to let server state settle
+					setTimeout(() => {
+						runVerification(false)
+					}, 2500)
 				}
 			})
 
 			window.api.onVerificationResult((res) => {
 				if (!res.verified) {
-					showWarning(res.error || 'WhatsApp About server verification mismatch')
+					if ((waStatusVal.textContent || '').trim().toLowerCase() === 'connected') {
+						showSnackbar(res.error || 'WhatsApp About server verification mismatch', 'Dismiss')
+					}
 				} else {
 					clearWarning()
 					serverAboutVal.textContent = res.serverText || '(empty)'
