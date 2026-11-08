@@ -67,10 +67,10 @@ jobs:
           sudo apt-get install -y libarchive-tools libfuse2t64 || sudo apt-get install -y libarchive-tools libfuse2 || sudo apt-get install -y libarchive-tools || true
 
       - name: Build Baileys
-        working-directory: Baileys
         shell: bash
         run: |
-          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json')); delete p.packageManager; fs.writeFileSync('package.json', JSON.stringify(p,null,2));"
+          node WAPresence/scripts/prepare-baileys.js Baileys
+          cd Baileys
           pnpm install --no-frozen-lockfile
           pnpm run build
 
