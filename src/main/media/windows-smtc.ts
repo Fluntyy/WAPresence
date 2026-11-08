@@ -125,7 +125,8 @@ export class WindowsSmtcSource extends EventEmitter implements IMediaSource {
 					trackNumber: data.track_number || 0,
 					isPlaying,
 					isPaused,
-					source: 'Local'
+					source: 'Local',
+					app: (data.app || '').trim()
 				}
 
 				this.updateCurrentTrack(newTrack)
@@ -147,7 +148,8 @@ export class WindowsSmtcSource extends EventEmitter implements IMediaSource {
 				oldTrack.artist !== track.artist ||
 				oldTrack.album !== track.album ||
 				oldTrack.isPlaying !== track.isPlaying ||
-				oldTrack.isPaused !== track.isPaused
+				oldTrack.isPaused !== track.isPaused ||
+				oldTrack.app !== track.app
 			))
 
 		if (changed) {

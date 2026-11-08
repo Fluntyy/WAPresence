@@ -19,6 +19,13 @@ contextBridge.exposeInMainWorld('api', {
 	requestPairingCode: (phoneNumber) =>
 		ipcRenderer.invoke('whatsapp:request-pairing-code', phoneNumber),
 	getPresenceStatus: () => ipcRenderer.invoke('presence:get-status'),
+	togglePresencePause: () => ipcRenderer.invoke('presence:toggle-pause'),
+	getPresencePauseState: () => ipcRenderer.invoke('presence:get-pause-state'),
+	onPresencePauseChanged: (cb) => {
+		const listener = (_, data) => cb(data)
+		ipcRenderer.on('presence:pause-changed', listener)
+		return () => ipcRenderer.removeListener('presence:pause-changed', listener)
+	},
 
 	// Autostart & System Settings
 	getAutostart: () => ipcRenderer.invoke('autostart:get'),

@@ -212,6 +212,7 @@ export class PluginSource extends EventEmitter implements IMediaSource {
 			isPlaying,
 			isPaused,
 			source: 'Plugin',
+			app: typeof (payload as any).app === 'string' ? (payload as any).app : undefined,
 			customFields: Object.keys(customFields).length > 0 ? customFields : undefined
 		}
 

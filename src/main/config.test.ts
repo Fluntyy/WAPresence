@@ -15,7 +15,12 @@ import {
 	DEFAULT_THEME,
 	DEFAULT_START_WITH_OS,
 	DEFAULT_APPEND_PAUSE_EMOJI,
-	DEFAULT_PLUGIN_PORT
+	DEFAULT_PLUGIN_PORT,
+	DEFAULT_BLACKLIST_APPS,
+	DEFAULT_EXCLUDE_REGEX,
+	DEFAULT_PAUSED_TIMEOUT,
+	DEFAULT_NOTIFY_ON_MINIMIZE,
+	DEFAULT_NOTIFY_ON_CONNECTION
 } from './config.js'
 
 describe('config', () => {
@@ -44,7 +49,12 @@ describe('config', () => {
 			theme: DEFAULT_THEME,
 			startWithOS: DEFAULT_START_WITH_OS,
 			appendPauseEmoji: DEFAULT_APPEND_PAUSE_EMOJI,
-			pluginPort: DEFAULT_PLUGIN_PORT
+			pluginPort: DEFAULT_PLUGIN_PORT,
+			blacklistApps: DEFAULT_BLACKLIST_APPS,
+			excludeRegex: DEFAULT_EXCLUDE_REGEX,
+			pausedTimeout: DEFAULT_PAUSED_TIMEOUT,
+			notifyOnMinimize: DEFAULT_NOTIFY_ON_MINIMIZE,
+			notifyOnConnection: DEFAULT_NOTIFY_ON_CONNECTION
 		})
 		expect(fs.existsSync(tempConfigFile)).toBe(true)
 	})
@@ -59,6 +69,15 @@ StartWithOS = true
 AppendPauseEmoji = false
 PluginPort = 7000
 
+[LocalMedia]
+BlacklistApps = chrome.exe, vlc
+ExcludeRegex = (ad|sponsor)
+PausedTimeout = 45
+
+[Notifications]
+NotifyOnMinimize = true
+NotifyOnConnection = false
+
 [Spotify]
 ClientID = test-client-id
 RedirectURI = http://127.0.0.1:6969/callback
@@ -72,6 +91,11 @@ RedirectURI = http://127.0.0.1:6969/callback
 		expect(cfg.startWithOS).toBe(true)
 		expect(cfg.appendPauseEmoji).toBe(false)
 		expect(cfg.pluginPort).toBe(7000)
+		expect(cfg.blacklistApps).toEqual(['chrome.exe', 'vlc'])
+		expect(cfg.excludeRegex).toBe('(ad|sponsor)')
+		expect(cfg.pausedTimeout).toBe(45)
+		expect(cfg.notifyOnMinimize).toBe(true)
+		expect(cfg.notifyOnConnection).toBe(false)
 		expect(cfg.clientID).toBe('test-client-id')
 		expect(cfg.redirectURI).toBe('http://127.0.0.1:6969/callback')
 	})
@@ -132,6 +156,8 @@ RedirectURI = http://127.0.0.1:6969/callback
 		expect(() => validateConfig({ source: 'Invalid' as any })).toThrow(/Source must be 'Local', 'Spotify', or 'Plugin'/)
 		expect(() => validateConfig({ theme: 'InvalidTheme' as any })).toThrow(/Theme must be 'System', 'Light', or 'Dark'/)
 		expect(() => validateConfig({ pluginPort: 80 })).toThrow(/Plugin Port must be a valid port number/)
+		expect(() => validateConfig({ pausedTimeout: -5 })).toThrow(/Paused Timeout must be a non-negative number/)
+		expect(() => validateConfig({ excludeRegex: '[invalid(' })).toThrow(/Invalid exclude regex pattern/)
 
 		// Valid values should not throw
 		expect(() => validateConfig({
@@ -139,7 +165,9 @@ RedirectURI = http://127.0.0.1:6969/callback
 			format: 'valid format',
 			source: 'Plugin',
 			theme: 'System',
-			pluginPort: 6970
+			pluginPort: 6970,
+			pausedTimeout: 60,
+			excludeRegex: 'test.*'
 		})).not.toThrow()
 	})
 })

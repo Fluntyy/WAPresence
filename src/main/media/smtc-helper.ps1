@@ -43,6 +43,7 @@ try {
                         album = if ($props -and $props.AlbumTitle) { $props.AlbumTitle } else { "" }
                         track_number = $trackNum
                         status = $status
+                        app = if ($session.SourceAppUserModelId) { $session.SourceAppUserModelId } else { "" }
                     }
                     $json = ConvertTo-Json -Compress $obj
                     if ($json -ne $lastOutput) {

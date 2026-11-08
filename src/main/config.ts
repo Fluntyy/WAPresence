@@ -12,6 +12,11 @@ export const DEFAULT_THEME = 'System'
 export const DEFAULT_START_WITH_OS = false
 export const DEFAULT_APPEND_PAUSE_EMOJI = true
 export const DEFAULT_PLUGIN_PORT = 6970
+export const DEFAULT_BLACKLIST_APPS: string[] = []
+export const DEFAULT_EXCLUDE_REGEX = ''
+export const DEFAULT_PAUSED_TIMEOUT = 30
+export const DEFAULT_NOTIFY_ON_MINIMIZE = false
+export const DEFAULT_NOTIFY_ON_CONNECTION = true
 
 export const MIN_UPDATE_EVERY = 1
 export const MAX_UPDATE_EVERY = 60
@@ -29,6 +34,11 @@ export interface AppConfig {
 	startWithOS: boolean
 	appendPauseEmoji: boolean
 	pluginPort: number
+	blacklistApps: string[]
+	excludeRegex: string
+	pausedTimeout: number
+	notifyOnMinimize: boolean
+	notifyOnConnection: boolean
 }
 
 export function getDefaultConfig(): AppConfig {
@@ -41,7 +51,12 @@ export function getDefaultConfig(): AppConfig {
 		theme: DEFAULT_THEME,
 		startWithOS: DEFAULT_START_WITH_OS,
 		appendPauseEmoji: DEFAULT_APPEND_PAUSE_EMOJI,
-		pluginPort: DEFAULT_PLUGIN_PORT
+		pluginPort: DEFAULT_PLUGIN_PORT,
+		blacklistApps: [...DEFAULT_BLACKLIST_APPS],
+		excludeRegex: DEFAULT_EXCLUDE_REGEX,
+		pausedTimeout: DEFAULT_PAUSED_TIMEOUT,
+		notifyOnMinimize: DEFAULT_NOTIFY_ON_MINIMIZE,
+		notifyOnConnection: DEFAULT_NOTIFY_ON_CONNECTION
 	}
 }
 
@@ -75,6 +90,20 @@ export function validateConfig(config: Partial<AppConfig>): void {
 	if (config.pluginPort !== undefined) {
 		if (typeof config.pluginPort !== 'number' || isNaN(config.pluginPort) || config.pluginPort < 1024 || config.pluginPort > 65535) {
 			throw new Error('Plugin Port must be a valid port number between 1024 and 65535')
+		}
+	}
+
+	if (config.pausedTimeout !== undefined) {
+		if (typeof config.pausedTimeout !== 'number' || isNaN(config.pausedTimeout) || config.pausedTimeout < 0) {
+			throw new Error('Paused Timeout must be a non-negative number of seconds (0 to disable)')
+		}
+	}
+
+	if (config.excludeRegex !== undefined && typeof config.excludeRegex === 'string' && config.excludeRegex.trim().length > 0) {
+		try {
+			new RegExp(config.excludeRegex)
+		} catch (err: any) {
+			throw new Error(`Invalid exclude regex pattern: ${err.message}`)
 		}
 	}
 }
@@ -143,6 +172,35 @@ export function loadConfig(filePath?: string): AppConfig {
 			}
 		}
 
+		const localMedia = parsed.LocalMedia || {}
+		if (localMedia.BlacklistApps !== undefined && typeof localMedia.BlacklistApps === 'string') {
+			current.blacklistApps = localMedia.BlacklistApps.split(',')
+				.map((s: string) => s.trim())
+				.filter((s: string) => s.length > 0)
+		} else if (Array.isArray(localMedia.BlacklistApps)) {
+			current.blacklistApps = localMedia.BlacklistApps.map(String).map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+		}
+
+		if (localMedia.ExcludeRegex !== undefined && typeof localMedia.ExcludeRegex === 'string') {
+			current.excludeRegex = localMedia.ExcludeRegex.trim()
+		}
+
+		if (localMedia.PausedTimeout !== undefined) {
+			const pt = parseInt(localMedia.PausedTimeout, 10)
+			if (!isNaN(pt) && pt >= 0) {
+				current.pausedTimeout = pt
+			}
+		}
+
+		const notifications = parsed.Notifications || {}
+		if (notifications.NotifyOnMinimize !== undefined) {
+			current.notifyOnMinimize = parseBoolean(notifications.NotifyOnMinimize, DEFAULT_NOTIFY_ON_MINIMIZE)
+		}
+
+		if (notifications.NotifyOnConnection !== undefined) {
+			current.notifyOnConnection = parseBoolean(notifications.NotifyOnConnection, DEFAULT_NOTIFY_ON_CONNECTION)
+		}
+
 		const spotify = parsed.Spotify || {}
 		if (spotify.ClientID !== undefined && typeof spotify.ClientID === 'string') {
 			current.clientID = spotify.ClientID.trim()
@@ -177,6 +235,15 @@ export function saveConfig(filePath?: string, config?: AppConfig): void {
 			StartWithOS: targetConfig.startWithOS ?? DEFAULT_START_WITH_OS,
 			AppendPauseEmoji: targetConfig.appendPauseEmoji ?? DEFAULT_APPEND_PAUSE_EMOJI,
 			PluginPort: targetConfig.pluginPort || DEFAULT_PLUGIN_PORT
+		},
+		LocalMedia: {
+			BlacklistApps: (targetConfig.blacklistApps || []).join(', '),
+			ExcludeRegex: targetConfig.excludeRegex || '',
+			PausedTimeout: targetConfig.pausedTimeout ?? DEFAULT_PAUSED_TIMEOUT
+		},
+		Notifications: {
+			NotifyOnMinimize: targetConfig.notifyOnMinimize ?? DEFAULT_NOTIFY_ON_MINIMIZE,
+			NotifyOnConnection: targetConfig.notifyOnConnection ?? DEFAULT_NOTIFY_ON_CONNECTION
 		},
 		Spotify: {
 			ClientID: targetConfig.clientID,

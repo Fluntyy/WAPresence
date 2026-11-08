@@ -8,6 +8,7 @@ export interface MediaTrackInfo {
 	isPlaying: boolean
 	isPaused: boolean
 	source?: 'Local' | 'Spotify' | 'Plugin'
+	app?: string
 	customFields?: Record<string, string | number>
 }
 

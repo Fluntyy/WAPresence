@@ -20,6 +20,7 @@ export interface UpdaterStatus {
 	isBackingOff: boolean
 	backoffUntil: number
 	errorMessage: string | null
+	isPresencePaused: boolean
 }
 
 export class PresenceUpdater extends EventEmitter {
@@ -37,6 +38,8 @@ export class PresenceUpdater extends EventEmitter {
 	private lastErrorMessage: string | null = null
 	private isUpdating: boolean = false
 	private lastTrack: MediaTrackInfo | null = null
+	private pausedSince: number | null = null
+	private isPresencePaused: boolean = false
 
 	constructor(client: WhatsAppClient, config: AppConfig, customMediaSource?: IMediaSource) {
 		super()
@@ -76,8 +79,99 @@ export class PresenceUpdater extends EventEmitter {
 			lastVerification: this.lastVerification,
 			isBackingOff: Date.now() < this.backoffUntil,
 			backoffUntil: this.backoffUntil,
-			errorMessage: this.lastErrorMessage
+			errorMessage: this.lastErrorMessage,
+			isPresencePaused: this.isPresencePaused
 		}
+	}
+
+	public isPaused(): boolean {
+		return this.isPresencePaused
+	}
+
+	public async togglePause(): Promise<boolean> {
+		await this.setPause(!this.isPresencePaused)
+		return this.isPresencePaused
+	}
+
+	public async setPause(paused: boolean): Promise<void> {
+		if (this.isPresencePaused === paused) return
+		this.isPresencePaused = paused
+		log.info({ paused }, 'Presence manual pause state changed')
+
+		if (paused) {
+			try {
+				await this.client.restoreOriginalBio()
+				this.lastWrittenText = this.client.getOriginalBio()
+			} catch (err) {
+				log.warn({ err }, 'Error restoring bio when pausing presence')
+			}
+		} else {
+			this.pausedSince = null
+			this.lastWrittenText = null
+			if (this.isRunning) {
+				this.scheduleNextTick(0)
+			}
+		}
+
+		this.emit('pause_change', this.isPresencePaused)
+		this.emit('status_updated', this.getStatus())
+	}
+
+	private filterTrack(track: MediaTrackInfo | null): MediaTrackInfo | null {
+		if (!track) {
+			this.pausedSince = null
+			return null
+		}
+
+		// 1. Blacklist Apps check
+		if (this.config.blacklistApps && this.config.blacklistApps.length > 0 && track.app) {
+			const appLower = track.app.toLowerCase()
+			const isBlacklisted = this.config.blacklistApps.some((b) => {
+				const bLower = b.trim().toLowerCase()
+				if (!bLower) return false
+				return appLower === bLower || appLower.includes(bLower) || bLower.includes(appLower)
+			})
+			if (isBlacklisted) {
+				log.debug({ app: track.app }, 'Track ignored due to blacklisted app')
+				this.pausedSince = null
+				return null
+			}
+		}
+
+		// 2. Exclude Regex check
+		if (this.config.excludeRegex && this.config.excludeRegex.trim().length > 0) {
+			try {
+				const regex = new RegExp(this.config.excludeRegex.trim(), 'i')
+				const fullString = `${track.artist || ''} - ${track.title || ''} ${track.album || ''}`
+				if (regex.test(track.title || '') || regex.test(track.artist || '') || regex.test(fullString)) {
+					log.debug({ title: track.title, artist: track.artist }, 'Track ignored due to exclude regex match')
+					this.pausedSince = null
+					return null
+				}
+			} catch (err) {
+				log.warn({ err }, 'Invalid exclude regex during track filtering')
+			}
+		}
+
+		// 3. Paused Timeout check
+		if (track.isPaused) {
+			const now = Date.now()
+			if (this.pausedSince === null) {
+				this.pausedSince = now
+			}
+			const timeoutSeconds = this.config.pausedTimeout ?? 30
+			if (timeoutSeconds > 0) {
+				const elapsedSeconds = (now - this.pausedSince) / 1000
+				if (elapsedSeconds >= timeoutSeconds) {
+					log.debug({ elapsedSeconds, timeoutSeconds }, 'Media paused longer than timeout; treating as inactive')
+					return null
+				}
+			}
+		} else {
+			this.pausedSince = null
+		}
+
+		return track
 	}
 
 	public async start(): Promise<void> {
@@ -118,7 +212,7 @@ export class PresenceUpdater extends EventEmitter {
 	}
 
 	public async tick(): Promise<void> {
-		if (this.isUpdating || !this.isRunning) return
+		if (this.isUpdating || !this.isRunning || this.isPresencePaused) return
 		if (this.client.getState() !== 'connected') {
 			return
 		}
@@ -132,8 +226,10 @@ export class PresenceUpdater extends EventEmitter {
 		this.isUpdating = true
 
 		try {
-			const currentTrack = await this.mediaSource.getCurrentTrack()
-			if (!this.isRunning) return
+			const rawTrack = await this.mediaSource.getCurrentTrack()
+			if (!this.isRunning || this.isPresencePaused) return
+
+			const currentTrack = this.filterTrack(rawTrack)
 			this.lastTrack = currentTrack
 			const originalBio = this.client.getOriginalBio()
 
@@ -227,6 +323,7 @@ export class PresenceUpdater extends EventEmitter {
 			this.mediaSource = createMediaSource(newConfig)
 			this.attachMediaSourceListeners()
 			await this.mediaSource.start()
+			this.emit('placeholders_change', this.getAvailablePlaceholders())
 		} else if (this.mediaSource instanceof SpotifySource) {
 			this.mediaSource.setPollInterval(newConfig.updateEvery)
 		}

@@ -317,7 +317,8 @@ export class SpotifySource extends EventEmitter implements IMediaSource {
 				trackNumber,
 				isPlaying,
 				isPaused,
-				source: 'Spotify'
+				source: 'Spotify',
+				app: 'Spotify'
 			}
 		} catch (err) {
 			log.error({ err }, 'Error querying Spotify currently-playing')

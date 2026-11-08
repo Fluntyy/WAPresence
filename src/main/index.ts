@@ -77,6 +77,16 @@ function getIconPath(): string {
 	return asarIcon
 }
 
+function showNotification(title: string, body: string) {
+	if (Notification.isSupported()) {
+		new Notification({
+			title,
+			body,
+			icon: getAppIcon()
+		}).show()
+	}
+}
+
 function getAppIcon(): Electron.NativeImage {
 	const iconPath = getIconPath()
 	return nativeImage.createFromPath(iconPath)
@@ -243,11 +253,8 @@ function createSettingsWindow() {
 			// Do NOT preventDefault! Allow window to destroy its renderer process
 			// to reclaim memory while running in the system tray.
 			log.info('Settings window closed; unloading renderer to save RAM')
-			if (Notification.isSupported()) {
-				new Notification({
-					title: 'WAPresence',
-					body: 'Minimized to system tray'
-				}).show()
+			if (config.notifyOnMinimize) {
+				showNotification('WAPresence', 'Minimized to system tray')
 			}
 		}
 	})
@@ -349,12 +356,11 @@ function openSettingsAndCheckUpdates() {
 	}
 }
 
-function createTray() {
-	if (tray) return
+function updateTrayMenu() {
+	if (!tray || tray.isDestroyed()) return
 
-	const appIcon = getAppIcon()
-	tray = new Tray(appIcon)
-	tray.setToolTip('WAPresence')
+	const isPaused = presenceUpdater?.isPaused() ?? false
+	const isConnected = whatsappClient.getState() === 'connected'
 
 	const contextMenu = Menu.buildFromTemplate([
 		{
@@ -368,6 +374,16 @@ function createTray() {
 					createSettingsWindow()
 				} else {
 					createLoginWindow()
+				}
+			}
+		},
+		{
+			label: isPaused ? 'Resume Presence' : 'Pause Presence',
+			enabled: isConnected,
+			click: async () => {
+				if (presenceUpdater) {
+					await presenceUpdater.togglePause()
+					updateTrayMenu()
 				}
 			}
 		},
@@ -394,6 +410,15 @@ function createTray() {
 	])
 
 	tray.setContextMenu(contextMenu)
+}
+
+function createTray() {
+	if (tray) return
+
+	const appIcon = getAppIcon()
+	tray = new Tray(appIcon)
+	tray.setToolTip('WAPresence')
+	updateTrayMenu()
 
 	tray.on('double-click', () => {
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
@@ -552,6 +577,19 @@ function setupIpcHandlers() {
 		return presenceUpdater ? presenceUpdater.getStatus() : null
 	})
 
+	ipcMain.handle('presence:toggle-pause', async () => {
+		if (presenceUpdater) {
+			const isPaused = await presenceUpdater.togglePause()
+			updateTrayMenu()
+			return isPaused
+		}
+		return false
+	})
+
+	ipcMain.handle('presence:get-pause-state', () => {
+		return presenceUpdater ? presenceUpdater.isPaused() : false
+	})
+
 	ipcMain.handle('updater:get-status', () => updaterService.getState())
 	ipcMain.handle('updater:check', async () => updaterService.checkForUpdates())
 	ipcMain.handle('updater:download', async () => updaterService.downloadUpdate())
@@ -674,6 +712,12 @@ function initPresenceUpdater() {
 				settingsWindow.webContents.send('plugin:placeholders', placeholders)
 			}
 		})
+		presenceUpdater.on('pause_change', (isPaused) => {
+			updateTrayMenu()
+			if (settingsWindow && !settingsWindow.isDestroyed()) {
+				settingsWindow.webContents.send('presence:pause-changed', isPaused)
+			}
+		})
 		presenceUpdater.start().catch((err) => {
 			log.error({ err }, 'Error starting presence updater')
 		})
@@ -716,6 +760,10 @@ function setupWhatsAppEvents() {
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
 			settingsWindow.webContents.send('whatsapp:status', 'connected')
 		}
+		updateTrayMenu()
+		if (config.notifyOnConnection) {
+			showNotification('WAPresence', 'Connected to WhatsApp')
+		}
 
 		// Initialize presence updater loop
 		initPresenceUpdater()
@@ -743,12 +791,20 @@ function setupWhatsAppEvents() {
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
 			settingsWindow.webContents.send('whatsapp:status', 'disconnected')
 		}
+		updateTrayMenu()
+		if (config.notifyOnConnection) {
+			showNotification('WAPresence', 'Reconnecting to WhatsApp...')
+		}
 	})
 
 	whatsappClient.on('logged_out', () => {
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
 			settingsWindow.close()
 			settingsWindow = null
+		}
+		updateTrayMenu()
+		if (config.notifyOnConnection) {
+			showNotification('WAPresence', 'Logged out of WhatsApp')
 		}
 		createLoginWindow()
 		whatsappClient.connect().catch((err) => {

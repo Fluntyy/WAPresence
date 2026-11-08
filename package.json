@@ -1,7 +1,7 @@
 {
   "name": "WAPresence",
   "productName": "WAPresence",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "WhatsApp Media Presence Desktop Application",
   "type": "module",
   "main": "dist/main/index.js",
@@ -27,7 +27,7 @@
   "dependencies": {
     "@material/material-color-utilities": "^0.4.0",
     "@material/web": "^2.5.0",
-    "@whiskeysockets/baileys": "file:..\\Baileys",
+    "@whiskeysockets/baileys": "file:../Baileys",
     "dbus-next": "^0.10.2",
     "electron-updater": "^6.8.11",
     "ini": "^7.0.0",

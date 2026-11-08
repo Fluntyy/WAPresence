@@ -349,7 +349,7 @@
 		<section class="md3-card">
 			<div class="card-header-title">
 				<span class="material-symbols-rounded">vital_signs</span>
-				Live Status & WhatsApp Verification
+				Live Status
 			</div>
 
 			<div class="status-item">
@@ -369,11 +369,17 @@
 				<span id="server-about-val" class="status-value font-mono-code">None</span>
 			</div>
 
-			<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
-				<md-outlined-button id="btn-verify-now">
-					<span class="material-symbols-rounded" slot="icon">verified</span>
-					Verify now
-				</md-outlined-button>
+			<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px; gap: 8px;">
+				<div style="display: flex; gap: 8px; align-items: center;">
+					<md-outlined-button id="btn-verify-now">
+						<span class="material-symbols-rounded" slot="icon">verified</span>
+						Verify now
+					</md-outlined-button>
+					<md-filled-tonal-button id="btn-toggle-pause">
+						<span class="material-symbols-rounded" slot="icon" id="btn-toggle-pause-icon">pause</span>
+						<span id="btn-toggle-pause-text">Pause Presence</span>
+					</md-filled-tonal-button>
+				</div>
 				<span id="verify-result-text" style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);"></span>
 			</div>
 		</section>
@@ -435,6 +441,52 @@
 				<md-switch id="pref-pause-emoji" selected></md-switch>
 			</div>
 
+			<!-- Paused Bio Restore Timeout -->
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Paused Bio Restore Timeout</div>
+					<div class="pref-info-desc">Restore original bio after media stays paused (seconds, 0 to disable).</div>
+				</div>
+				<md-outlined-text-field id="pref-paused-timeout" type="number" suffix-text="sec" min="0" value="30" style="width: 120px;"></md-outlined-text-field>
+			</div>
+
+			<!-- Blacklist Apps -->
+			<div class="pref-row" style="flex-direction: column; align-items: stretch; gap: 4px;">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Blacklist Applications</div>
+					<div class="pref-info-desc">Ignore media playing from these apps (comma-separated, e.g. chrome, msedge, vlc).</div>
+				</div>
+				<md-outlined-text-field id="pref-blacklist-apps" placeholder="e.g. chrome, msedge, vlc" style="width: 100%;"></md-outlined-text-field>
+			</div>
+
+			<!-- Exclude Regex -->
+			<div class="pref-row" style="flex-direction: column; align-items: stretch; gap: 4px;">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Exclude Media Filter (Regex)</div>
+					<div class="pref-info-desc">Ignore tracks matching a regex pattern (e.g. (advertisement|sponsor|private)).</div>
+				</div>
+				<md-outlined-text-field id="pref-exclude-regex" placeholder="e.g. (advertisement|sponsor)" style="width: 100%;"></md-outlined-text-field>
+			</div>
+
+			<!-- Notifications Section -->
+			<hr style="border: none; border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;">
+
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Notify on Minimize to Tray</div>
+					<div class="pref-info-desc">Show a system notification when closing WAPresence to the system tray.</div>
+				</div>
+				<md-switch id="pref-notify-minimize"></md-switch>
+			</div>
+
+			<div class="pref-row">
+				<div class="pref-info-group">
+					<div class="pref-info-title">Connection Status Notifications</div>
+					<div class="pref-info-desc">Show notifications for WhatsApp connection, reconnection, and logout events.</div>
+				</div>
+				<md-switch id="pref-notify-connection" selected></md-switch>
+			</div>
+
 			<!-- Plugin Port -->
 			<div class="pref-row">
 				<div class="pref-info-group">
@@ -452,7 +504,7 @@
 					<span class="material-symbols-rounded">update</span>
 					Application Updates
 				</div>
-				<div class="pref-info-desc" id="updater-status-desc">Version: v1.1.0 (Checking for updates...)</div>
+				<div class="pref-info-desc" id="updater-status-desc">Version: v1.2.0 (Checking for updates...)</div>
 
 				<md-linear-progress id="updater-progress" style="display: none; width: 100%;"></md-linear-progress>
 
@@ -647,6 +699,18 @@
 		const btnCheckUpdate = document.getElementById('btn-check-update')
 		const btnInstallUpdate = document.getElementById('btn-install-update')
 
+		// Local Media & Notification Preferences
+		const prefPausedTimeout = document.getElementById('pref-paused-timeout')
+		const prefBlacklistApps = document.getElementById('pref-blacklist-apps')
+		const prefExcludeRegex = document.getElementById('pref-exclude-regex')
+		const prefNotifyMinimize = document.getElementById('pref-notify-minimize')
+		const prefNotifyConnection = document.getElementById('pref-notify-connection')
+
+		// Pause presence button
+		const btnTogglePause = document.getElementById('btn-toggle-pause')
+		const btnTogglePauseIcon = document.getElementById('btn-toggle-pause-icon')
+		const btnTogglePauseText = document.getElementById('btn-toggle-pause-text')
+
 		let currentConfig = {
 			updateEvery: 1,
 			format: 'Listening to [artist] - [title]',
@@ -656,18 +720,37 @@
 			startWithOS: false,
 			theme: 'System',
 			appendPauseEmoji: true,
-			pluginPort: 6970
+			pluginPort: 6970,
+			blacklistApps: [],
+			excludeRegex: '',
+			pausedTimeout: 30,
+			notifyOnMinimize: false,
+			notifyOnConnection: true
 		}
 
+		function updatePauseUI(isPaused) {
+			if (isPaused) {
+				btnTogglePauseIcon.textContent = 'play_arrow'
+				btnTogglePauseText.textContent = 'Resume Presence'
+			} else {
+				btnTogglePauseIcon.textContent = 'pause'
+				btnTogglePauseText.textContent = 'Pause Presence'
+			}
+		}
+
+		btnTogglePause.addEventListener('click', async () => {
+			const isPaused = await window.api.togglePresencePause()
+			updatePauseUI(isPaused)
+			if (isPaused) {
+				showSuccess('Presence paused: original bio restored')
+			} else {
+				showSuccess('Presence resumed')
+			}
+		})
+
 		async function switchSource(src) {
-			currentSource = src
-			srcLocal.classList.toggle('active', src === 'Local')
-			srcSpotify.classList.toggle('active', src === 'Spotify')
-			srcPlugin.classList.toggle('active', src === 'Plugin')
-
+			setSource(src)
 			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
-			sourceVal.textContent = src === 'Plugin' ? `Plugin (Port ${port})` : (src === 'Spotify' ? 'Spotify' : 'Local Media')
-
 			currentConfig.source = src
 			currentConfig.pluginPort = port
 
@@ -694,6 +777,14 @@
 			srcPlugin.classList.toggle('active', src === 'Plugin')
 			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
 			sourceVal.textContent = src === 'Plugin' ? `Plugin (Port ${port})` : (src === 'Spotify' ? 'Spotify' : 'Local Media')
+
+			if (src !== 'Plugin') {
+				renderPlaceholders(['[artist]', '[title]', '[album]', '[tracknum]', '[bio]'])
+			} else {
+				window.api?.getPluginPlaceholders?.().then((p) => {
+					if (Array.isArray(p) && p.length > 0) renderPlaceholders(p)
+				}).catch(() => {})
+			}
 		}
 
 		srcLocal.addEventListener('click', () => switchSource('Local'))
@@ -833,15 +924,26 @@
 			document.body.classList.remove('dialog-open')
 
 			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
+			const pausedTimeout = Math.max(0, parseInt(prefPausedTimeout.value, 10) || 0)
+			const blacklistApps = (prefBlacklistApps.value || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+			const excludeRegex = (prefExcludeRegex.value || '').trim()
+			const notifyOnMinimize = Boolean(prefNotifyMinimize.selected)
+			const notifyOnConnection = Boolean(prefNotifyConnection.selected)
+
 			currentConfig.pluginPort = port
+			currentConfig.pausedTimeout = pausedTimeout
+			currentConfig.blacklistApps = blacklistApps
+			currentConfig.excludeRegex = excludeRegex
+			currentConfig.notifyOnMinimize = notifyOnMinimize
+			currentConfig.notifyOnConnection = notifyOnConnection
+
 			if (currentSource === 'Plugin') {
 				sourceVal.textContent = `Plugin (Port ${port})`
-				await window.api.saveConfig({
-					...currentConfig,
-					source: currentSource,
-					pluginPort: port
-				})
 			}
+
+			await window.api.saveConfig({
+				...currentConfig
+			})
 		})
 
 		prefPluginPort.addEventListener('change', async () => {
@@ -905,16 +1007,23 @@
 
 		function updatePresenceStatus(status) {
 			if (!status) return
-			if (status.currentTrack && (status.currentTrack.title || status.currentTrack.artist)) {
-				const t = status.currentTrack
-				let display = t.artist && t.title ? `${t.artist} - ${t.title}` : (t.title || t.artist)
-				// Prevent duplicate pause emoji if already present in title
-				if (t.isPlaying === false && !display.includes('⏸️')) {
-					display = `${display} ⏸️`
-				}
-				nowPlayingVal.textContent = display
+
+			if (status.isPresencePaused) {
+				updatePauseUI(true)
+				nowPlayingVal.textContent = 'Paused (Presence Paused)'
 			} else {
-				nowPlayingVal.textContent = 'None'
+				updatePauseUI(false)
+				if (status.currentTrack && (status.currentTrack.title || status.currentTrack.artist)) {
+					const t = status.currentTrack
+					let display = t.artist && t.title ? `${t.artist} - ${t.title}` : (t.title || t.artist)
+					// Prevent duplicate pause emoji if already present in title
+					if (t.isPlaying === false && !display.includes('⏸️')) {
+						display = `${display} ⏸️`
+					}
+					nowPlayingVal.textContent = display
+				} else {
+					nowPlayingVal.textContent = 'None'
+				}
 			}
 
 			if (status.lastWrittenText) {
@@ -935,6 +1044,11 @@
 			updateEveryInput.value = String(currentConfig.updateEvery)
 			formatTextInput.value = currentConfig.format || ''
 			prefPluginPort.value = String(currentConfig.pluginPort || 6970)
+			prefPausedTimeout.value = String(currentConfig.pausedTimeout ?? 30)
+			prefBlacklistApps.value = Array.isArray(currentConfig.blacklistApps) ? currentConfig.blacklistApps.join(', ') : ''
+			prefExcludeRegex.value = currentConfig.excludeRegex || ''
+			prefNotifyMinimize.selected = Boolean(currentConfig.notifyOnMinimize)
+			prefNotifyConnection.selected = currentConfig.notifyOnConnection ?? true
 			setSource(currentConfig.source || 'Local')
 
 			prefTheme.value = currentConfig.theme || 'System'
@@ -949,11 +1063,20 @@
 				prefStartOs.selected = Boolean(currentConfig.startWithOS)
 			}
 
+			if (currentConfig.source === 'Plugin') {
+				try {
+					const placeholders = await window.api.getPluginPlaceholders()
+					if (Array.isArray(placeholders) && placeholders.length > 0) {
+						renderPlaceholders(placeholders)
+					}
+				} catch {}
+			} else {
+				renderPlaceholders(['[artist]', '[title]', '[album]', '[tracknum]', '[bio]'])
+			}
+
 			try {
-				const placeholders = await window.api.getPluginPlaceholders()
-				if (Array.isArray(placeholders) && placeholders.length > 0) {
-					renderPlaceholders(placeholders)
-				}
+				const isPaused = await window.api.getPresencePauseState()
+				updatePauseUI(isPaused)
 			} catch {}
 
 			updateCounter()
@@ -980,6 +1103,9 @@
 			const interval = parseInt(updateEveryInput.value, 10) || 1
 			const format = (formatTextInput.value || '').trim() || 'Listening to [artist] - [title]'
 			const pluginPort = parseInt(prefPluginPort.value, 10) || 6970
+			const pausedTimeout = Math.max(0, parseInt(prefPausedTimeout.value, 10) || 0)
+			const blacklistApps = (prefBlacklistApps.value || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+			const excludeRegex = (prefExcludeRegex.value || '').trim()
 
 			const newConfig = {
 				...currentConfig,
@@ -989,7 +1115,12 @@
 				theme: prefTheme.value || 'System',
 				startWithOS: Boolean(prefStartOs.selected),
 				appendPauseEmoji: Boolean(prefPauseEmoji.selected),
-				pluginPort
+				pluginPort,
+				pausedTimeout,
+				blacklistApps,
+				excludeRegex,
+				notifyOnMinimize: Boolean(prefNotifyMinimize.selected),
+				notifyOnConnection: Boolean(prefNotifyConnection.selected)
 			}
 
 			const res = await window.api.saveConfig(newConfig)
@@ -1024,6 +1155,11 @@
 			prefStartOs.selected = currentConfig.startWithOS
 			prefPauseEmoji.selected = currentConfig.appendPauseEmoji
 			prefPluginPort.value = String(currentConfig.pluginPort)
+			prefPausedTimeout.value = String(currentConfig.pausedTimeout ?? 30)
+			prefBlacklistApps.value = ''
+			prefExcludeRegex.value = ''
+			prefNotifyMinimize.selected = false
+			prefNotifyConnection.selected = true
 			renderPlaceholders(['[artist]', '[title]', '[album]', '[tracknum]', '[bio]'])
 			updateCounter()
 			showSuccess('Settings reset to defaults')
@@ -1113,8 +1249,15 @@
 			})
 
 			window.api.onPluginPlaceholders((placeholders) => {
-				if (Array.isArray(placeholders) && placeholders.length > 0) {
+				if (currentSource === 'Plugin' && Array.isArray(placeholders) && placeholders.length > 0) {
 					renderPlaceholders(placeholders)
+				}
+			})
+
+			window.api.onPresencePauseChanged?.((isPaused) => {
+				updatePauseUI(isPaused)
+				if (isPaused) {
+					nowPlayingVal.textContent = 'Paused (Presence Paused)'
 				}
 			})
 

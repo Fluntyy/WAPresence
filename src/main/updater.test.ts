@@ -135,4 +135,86 @@ describe('PresenceUpdater', () => {
 
 		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('')
 	})
+
+	it('ignores track if app is in blacklistApps', async () => {
+		config.blacklistApps = ['chrome.exe', 'vlc']
+		fakeMedia.currentTrack = {
+			artist: 'YouTube',
+			title: 'Video Title',
+			isPlaying: true,
+			isPaused: false,
+			app: 'chrome.exe'
+		}
+
+		await updater.start()
+		await new Promise((r) => setTimeout(r, 50))
+
+		// Blacklisted -> treated as null -> falls back to original bio
+		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('My Default Bio')
+	})
+
+	it('ignores track if title/artist matches excludeRegex', async () => {
+		config.excludeRegex = '(sponsor|advertisement)'
+		fakeMedia.currentTrack = {
+			artist: 'Podcast',
+			title: 'Episode 1 (Sponsor Message)',
+			isPlaying: true,
+			isPaused: false
+		}
+
+		await updater.start()
+		await new Promise((r) => setTimeout(r, 50))
+
+		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('My Default Bio')
+	})
+
+	it('restores bio when media is paused longer than pausedTimeout', async () => {
+		config.pausedTimeout = 1 // 1 second timeout
+		fakeMedia.currentTrack = {
+			artist: 'Artist',
+			title: 'Paused Song',
+			isPlaying: false,
+			isPaused: true
+		}
+
+		await updater.start()
+		await new Promise((r) => setTimeout(r, 50))
+		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('Listening to Artist - Paused Song ⏸️')
+
+		// Wait for timeout to elapse
+		await new Promise((r) => setTimeout(r, 1100))
+		await updater.tick()
+
+		// Should now revert to original bio
+		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('My Default Bio')
+	})
+
+	it('manually toggles presence pause and restores bio', async () => {
+		fakeMedia.currentTrack = {
+			artist: 'Coldplay',
+			title: 'Yellow',
+			isPlaying: true,
+			isPaused: false
+		}
+
+		await updater.start()
+		await new Promise((r) => setTimeout(r, 50))
+		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('Listening to Coldplay - Yellow')
+
+		// Toggle pause
+		const isPaused = await updater.togglePause()
+		expect(isPaused).toBe(true)
+		expect(fakeClient.restoreOriginalBio).toHaveBeenCalled()
+
+		// Further tick while paused should not update
+		fakeClient.updateAboutWithVerification.mockClear()
+		await updater.tick()
+		expect(fakeClient.updateAboutWithVerification).not.toHaveBeenCalled()
+
+		// Resume
+		await updater.togglePause()
+		expect(updater.isPaused()).toBe(false)
+		await updater.tick()
+		expect(fakeClient.updateAboutWithVerification).toHaveBeenCalledWith('Listening to Coldplay - Yellow')
+	})
 })

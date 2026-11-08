@@ -135,7 +135,8 @@ export class LinuxMprisSource extends EventEmitter implements IMediaSource {
 					trackNumber,
 					isPlaying,
 					isPaused,
-					source: 'Local'
+					source: 'Local',
+					app: serviceName.replace('org.mpris.MediaPlayer2.', '')
 				}
 
 				if (isPlaying) {
@@ -160,7 +161,8 @@ export class LinuxMprisSource extends EventEmitter implements IMediaSource {
 				oldTrack.artist !== track.artist ||
 				oldTrack.album !== track.album ||
 				oldTrack.isPlaying !== track.isPlaying ||
-				oldTrack.isPaused !== track.isPaused
+				oldTrack.isPaused !== track.isPaused ||
+				oldTrack.app !== track.app
 			))
 
 		if (changed) {
