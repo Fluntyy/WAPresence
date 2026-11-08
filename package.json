@@ -22,7 +22,7 @@
     "electron",
     "material-design-3"
   ],
-  "author": "WAPresence",
+  "author": "WAPresence <wapresence@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
     "@material/material-color-utilities": "^0.4.0",
