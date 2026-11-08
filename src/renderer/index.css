@@ -199,13 +199,14 @@ body {
 /* ── Material 3 Snackbar / Toaster ── */
 .m3-snackbar {
 	position: fixed;
-	bottom: 24px;
-	left: 50%;
-	transform: translate(-50%, 20px) scale(0.96);
+	bottom: 16px;
+	left: 16px;
+	right: 16px;
+	width: calc(100% - 32px);
+	box-sizing: border-box;
+	transform: translateY(20px) scale(0.98);
 	background: var(--md-sys-color-inverse-surface, #313033);
 	color: var(--md-sys-color-inverse-on-surface, #f4eff4);
-	min-width: 288px;
-	max-width: min(568px, calc(100vw - 32px));
 	min-height: 48px;
 	padding: 12px 16px;
 	border-radius: 8px;
@@ -225,7 +226,7 @@ body {
 	opacity: 1;
 	visibility: visible;
 	pointer-events: auto;
-	transform: translate(-50%, 0) scale(1);
+	transform: translateY(0) scale(1);
 }
 
 .m3-snackbar-text {

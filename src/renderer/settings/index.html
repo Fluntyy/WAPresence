@@ -205,34 +205,6 @@
 			gap: 18px;
 			padding: 8px 28px 24px 28px;
 			overflow-x: hidden;
-			overflow-y: auto;
-			max-height: 480px;
-			scrollbar-width: thin !important;
-			scrollbar-color: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.4)) transparent !important;
-		}
-
-		.pref-list::-webkit-scrollbar {
-			display: block !important;
-			width: 8px !important;
-			height: 8px !important;
-		}
-
-		.pref-list::-webkit-scrollbar-track {
-			background: transparent !important;
-			margin: 8px 0 !important;
-		}
-
-		.pref-list::-webkit-scrollbar-thumb {
-			background: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.35)) !important;
-			border-radius: 9999px !important;
-			border: 2px solid transparent !important;
-			background-clip: content-box !important;
-		}
-
-		.pref-list::-webkit-scrollbar-thumb:hover {
-			background: var(--md-sys-color-outline, rgba(128, 128, 128, 0.6)) !important;
-			border: 2px solid transparent !important;
-			background-clip: content-box !important;
 		}
 
 		.dialog-actions {
@@ -425,11 +397,11 @@
 		</footer>
 	</div> <!-- /#app-container -->
 
-	<!-- Preferences & Updates Dialog -->
+	<!-- Preferences Dialog -->
 	<md-dialog id="pref-dialog">
 		<div slot="headline" class="dialog-headline">
 			<span class="material-symbols-rounded">settings</span>
-			Preferences & Updates
+			Preferences
 		</div>
 		<div slot="content" class="pref-list">
 			<!-- Start with OS -->

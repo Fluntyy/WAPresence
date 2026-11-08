@@ -98,8 +98,8 @@
 				style="flex: 1;">
 			</md-outlined-text-field>
 			<md-outlined-button id="btn-edit" style="height: 56px;">
-				<span class="material-symbols-rounded" slot="icon">edit</span>
-				Edit
+				<span class="material-symbols-rounded" slot="icon" id="btn-edit-icon">edit</span>
+				<span id="btn-edit-text">Edit</span>
 			</md-outlined-button>
 		</div>
 	</div>
@@ -124,12 +124,21 @@
 		const btnCancel = document.getElementById('btn-cancel')
 		const btnOk = document.getElementById('btn-ok')
 
+		const btnEditIcon = document.getElementById('btn-edit-icon')
+		const btnEditText = document.getElementById('btn-edit-text')
+
 		let isEditingRedirect = false
 
 		btnEdit.addEventListener('click', () => {
 			isEditingRedirect = !isEditingRedirect
 			redirectUriInput.disabled = !isEditingRedirect
-			btnEdit.textContent = isEditingRedirect ? 'Lock' : 'Edit'
+			if (isEditingRedirect) {
+				btnEditIcon.textContent = 'lock'
+				btnEditText.textContent = 'Lock'
+			} else {
+				btnEditIcon.textContent = 'edit'
+				btnEditText.textContent = 'Edit'
+			}
 		})
 
 		btnCancel.addEventListener('click', async () => {
