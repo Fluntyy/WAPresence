@@ -28,3 +28,12 @@ if (fs.existsSync(mediaPath)) {
 } else {
 	console.warn('Baileys messages-media.ts not found at:', mediaPath)
 }
+
+// Disable strict build checks for pnpm 11+
+const npmrcPath = path.join(targetDir, '.npmrc')
+fs.writeFileSync(npmrcPath, 'shamefully-hoist=true\nstrict-dep-builds=false\n')
+console.log('Wrote Baileys .npmrc')
+
+const workspacePath = path.join(targetDir, 'pnpm-workspace.yaml')
+fs.writeFileSync(workspacePath, 'strictDepBuilds: false\n')
+console.log('Wrote Baileys pnpm-workspace.yaml')
