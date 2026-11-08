@@ -281,9 +281,14 @@
 
 		<!-- Main Settings Card -->
 		<section class="md3-card">
-			<div class="row-flex" style="justify-content: flex-start;">
+			<div style="display: flex; flex-direction: column; gap: 8px;">
+				<span class="card-header-title">
+					<span class="material-symbols-rounded">perm_media</span>
+					Media Source
+				</span>
+
 				<!-- Source Segmented Control -->
-				<div class="source-segmented">
+				<div class="source-segmented" style="align-self: flex-start;">
 					<button type="button" class="source-btn active" id="src-local" data-source="Local">
 						<span class="material-symbols-rounded">computer</span>
 						Local Media
