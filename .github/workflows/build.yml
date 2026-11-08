@@ -90,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: |
-          pnpm exec electron-builder ${{ matrix.flags }}
+          pnpm exec electron-builder ${{ matrix.flags }} --publish never
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
