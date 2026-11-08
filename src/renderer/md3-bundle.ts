@@ -1,4 +1,5 @@
 import '@material/web/button/filled-button.js'
+import '@material/web/button/filled-tonal-button.js'
 import '@material/web/button/outlined-button.js'
 import '@material/web/button/text-button.js'
 import '@material/web/button/elevated-button.js'
@@ -54,6 +55,29 @@ const origFirstUpdated = (MdDialog.prototype as any).firstUpdated
 				}
 				.scroller {
 					overflow-x: hidden !important;
+					overflow-y: auto !important;
+					scrollbar-width: thin !important;
+					scrollbar-color: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.4)) transparent !important;
+				}
+				.scroller::-webkit-scrollbar {
+					display: block !important;
+					width: 8px !important;
+					height: 8px !important;
+				}
+				.scroller::-webkit-scrollbar-track {
+					background: transparent !important;
+					margin: 8px 0 !important;
+				}
+				.scroller::-webkit-scrollbar-thumb {
+					background: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.35)) !important;
+					border-radius: 9999px !important;
+					border: 2px solid transparent !important;
+					background-clip: content-box !important;
+				}
+				.scroller::-webkit-scrollbar-thumb:hover {
+					background: var(--md-sys-color-outline, rgba(128, 128, 128, 0.6)) !important;
+					border: 2px solid transparent !important;
+					background-clip: content-box !important;
 				}
 			`)
 			this.shadowRoot.adoptedStyleSheets = [...this.shadowRoot.adoptedStyleSheets, sheet]

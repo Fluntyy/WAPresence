@@ -109,7 +109,11 @@ export class PresenceUpdater extends EventEmitter {
 			this.pausedSince = null
 			this.lastWrittenText = null
 			if (this.isRunning) {
-				this.scheduleNextTick(0)
+				try {
+					await this.tick()
+				} catch (err) {
+					log.warn({ err }, 'Error running tick on presence resume')
+				}
 			}
 		}
 

@@ -149,3 +149,121 @@ body {
 	color: var(--md-sys-color-on-surface, #e1e3e1);
 	overflow-x: hidden;
 }
+
+/* ── Custom Material UI Scrollbar for Preferences & Dialogs ── */
+#pref-dialog,
+#pref-dialog .pref-list,
+.pref-list,
+.material-scrollbar {
+	scrollbar-width: thin !important;
+	scrollbar-color: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.4)) transparent !important;
+	-ms-overflow-style: auto !important;
+}
+
+#pref-dialog::-webkit-scrollbar,
+#pref-dialog .pref-list::-webkit-scrollbar,
+.pref-list::-webkit-scrollbar,
+.material-scrollbar::-webkit-scrollbar {
+	display: block !important;
+	width: 8px !important;
+	height: 8px !important;
+}
+
+#pref-dialog::-webkit-scrollbar-track,
+#pref-dialog .pref-list::-webkit-scrollbar-track,
+.pref-list::-webkit-scrollbar-track,
+.material-scrollbar::-webkit-scrollbar-track {
+	background: transparent !important;
+	margin: 8px 0 !important;
+}
+
+#pref-dialog::-webkit-scrollbar-thumb,
+#pref-dialog .pref-list::-webkit-scrollbar-thumb,
+.pref-list::-webkit-scrollbar-thumb,
+.material-scrollbar::-webkit-scrollbar-thumb {
+	background: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.35)) !important;
+	border-radius: 9999px !important;
+	border: 2px solid transparent !important;
+	background-clip: content-box !important;
+}
+
+#pref-dialog::-webkit-scrollbar-thumb:hover,
+#pref-dialog .pref-list::-webkit-scrollbar-thumb:hover,
+.pref-list::-webkit-scrollbar-thumb:hover,
+.material-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: var(--md-sys-color-outline, rgba(128, 128, 128, 0.6)) !important;
+	border: 2px solid transparent !important;
+	background-clip: content-box !important;
+}
+
+/* ── Material 3 Snackbar / Toaster ── */
+.m3-snackbar {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	transform: translate(-50%, 20px) scale(0.96);
+	background: var(--md-sys-color-inverse-surface, #313033);
+	color: var(--md-sys-color-inverse-on-surface, #f4eff4);
+	min-width: 288px;
+	max-width: min(568px, calc(100vw - 32px));
+	min-height: 48px;
+	padding: 12px 16px;
+	border-radius: 8px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	z-index: 10000;
+	pointer-events: none;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.22s cubic-bezier(0, 0, 0.2, 1), transform 0.22s cubic-bezier(0, 0, 0.2, 1), visibility 0.22s;
+}
+
+.m3-snackbar.show {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: translate(-50%, 0) scale(1);
+}
+
+.m3-snackbar-text {
+	font-family: var(--md-ref-typeface-plain);
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 400;
+	letter-spacing: 0.25px;
+	color: var(--md-sys-color-inverse-on-surface, #f4eff4);
+	flex: 1;
+	word-break: break-word;
+}
+
+.m3-snackbar-action {
+	background: none;
+	border: none;
+	padding: 6px 8px;
+	margin: -4px -4px -4px 0;
+	font-family: var(--md-ref-typeface-plain);
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.1px;
+	color: var(--md-sys-color-inverse-primary, #6ee7b7);
+	cursor: pointer;
+	border-radius: 4px;
+	transition: background 0.15s ease, opacity 0.15s ease;
+	user-select: none;
+	flex-shrink: 0;
+}
+
+.m3-snackbar-action:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.m3-snackbar-action:active {
+	background: rgba(255, 255, 255, 0.16);
+}
+
+.m3-snackbar.type-error .m3-snackbar-action {
+	color: #fca5a5;
+}

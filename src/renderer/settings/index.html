@@ -205,6 +205,34 @@
 			gap: 18px;
 			padding: 8px 28px 24px 28px;
 			overflow-x: hidden;
+			overflow-y: auto;
+			max-height: 480px;
+			scrollbar-width: thin !important;
+			scrollbar-color: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.4)) transparent !important;
+		}
+
+		.pref-list::-webkit-scrollbar {
+			display: block !important;
+			width: 8px !important;
+			height: 8px !important;
+		}
+
+		.pref-list::-webkit-scrollbar-track {
+			background: transparent !important;
+			margin: 8px 0 !important;
+		}
+
+		.pref-list::-webkit-scrollbar-thumb {
+			background: var(--md-sys-color-outline-variant, rgba(128, 128, 128, 0.35)) !important;
+			border-radius: 9999px !important;
+			border: 2px solid transparent !important;
+			background-clip: content-box !important;
+		}
+
+		.pref-list::-webkit-scrollbar-thumb:hover {
+			background: var(--md-sys-color-outline, rgba(128, 128, 128, 0.6)) !important;
+			border: 2px solid transparent !important;
+			background-clip: content-box !important;
 		}
 
 		.dialog-actions {
@@ -341,9 +369,9 @@
 			</div>
 		</section>
 
-		<!-- Alert Banners -->
-		<div id="warning-banner" class="banner banner-error"></div>
-		<div id="success-banner" class="banner banner-success"></div>
+		<!-- Alert Banners (hidden, M3 snackbar used instead) -->
+		<div id="warning-banner" class="banner banner-error" style="display: none !important;"></div>
+		<div id="success-banner" class="banner banner-success" style="display: none !important;"></div>
 
 		<!-- Live Status Card -->
 		<section class="md3-card">
@@ -375,10 +403,10 @@
 						<span class="material-symbols-rounded" slot="icon">verified</span>
 						Verify now
 					</md-outlined-button>
-					<md-filled-tonal-button id="btn-toggle-pause">
+					<md-outlined-button id="btn-toggle-pause">
 						<span class="material-symbols-rounded" slot="icon" id="btn-toggle-pause-icon">pause</span>
 						<span id="btn-toggle-pause-text">Pause Presence</span>
-					</md-filled-tonal-button>
+					</md-outlined-button>
 				</div>
 				<span id="verify-result-text" style="font-size: 11px; color: var(--md-sys-color-on-surface-variant);"></span>
 			</div>
@@ -588,6 +616,12 @@
 		</div>
 	</md-dialog>
 
+	<!-- Material Design 3 Snackbar / Toaster -->
+	<div id="m3-snackbar" class="m3-snackbar" role="status" aria-live="polite">
+		<span id="m3-snackbar-text" class="m3-snackbar-text"></span>
+		<button id="m3-snackbar-action" class="m3-snackbar-action" type="button">Dismiss</button>
+	</div>
+
 	<script>
 		// Material Theme initialization
 		const SEED_COLOR = '#00a884'
@@ -728,8 +762,12 @@
 			notifyOnConnection: true
 		}
 
+		let isPresencePaused = false
+		let isTogglingPause = false
+
 		function updatePauseUI(isPaused) {
-			if (isPaused) {
+			isPresencePaused = Boolean(isPaused)
+			if (isPresencePaused) {
 				btnTogglePauseIcon.textContent = 'play_arrow'
 				btnTogglePauseText.textContent = 'Resume Presence'
 			} else {
@@ -739,12 +777,27 @@
 		}
 
 		btnTogglePause.addEventListener('click', async () => {
-			const isPaused = await window.api.togglePresencePause()
-			updatePauseUI(isPaused)
-			if (isPaused) {
-				showSuccess('Presence paused: original bio restored')
-			} else {
-				showSuccess('Presence resumed')
+			if (isTogglingPause) return
+			isTogglingPause = true
+			btnTogglePause.disabled = true
+			const targetAction = isPresencePaused ? 'Resuming...' : 'Pausing...'
+			btnTogglePauseText.textContent = targetAction
+
+			try {
+				const isPaused = await window.api.togglePresencePause()
+				updatePauseUI(isPaused)
+				if (isPaused) {
+					showSnackbar('Presence paused: original bio restored')
+				} else {
+					showSnackbar('Presence resumed')
+				}
+				runVerification().catch(() => {})
+			} catch (err) {
+				updatePauseUI(isPresencePaused)
+				showSnackbar('Failed to update presence state', 'Dismiss')
+			} finally {
+				isTogglingPause = false
+				btnTogglePause.disabled = false
 			}
 		})
 
@@ -1206,23 +1259,62 @@
 			await window.api.installUpdate()
 		})
 
+		let snackbarTimer = null
+
+		function showSnackbar(message, actionText = 'Dismiss', onAction = null, duration = 4000) {
+			const snackbar = document.getElementById('m3-snackbar')
+			const snackbarText = document.getElementById('m3-snackbar-text')
+			const snackbarAction = document.getElementById('m3-snackbar-action')
+			if (!snackbar || !snackbarText || !snackbarAction) return
+
+			if (snackbarTimer) {
+				clearTimeout(snackbarTimer)
+				snackbarTimer = null
+			}
+
+			snackbarText.textContent = message
+
+			if (actionText) {
+				snackbarAction.textContent = actionText
+				snackbarAction.style.display = 'inline-block'
+				snackbarAction.onclick = () => {
+					hideSnackbar()
+					if (typeof onAction === 'function') onAction()
+				}
+			} else {
+				snackbarAction.style.display = 'none'
+			}
+
+			snackbar.classList.add('show')
+
+			if (duration > 0) {
+				snackbarTimer = setTimeout(() => {
+					hideSnackbar()
+				}, duration)
+			}
+		}
+
+		function hideSnackbar() {
+			const snackbar = document.getElementById('m3-snackbar')
+			if (snackbar) {
+				snackbar.classList.remove('show')
+			}
+			if (snackbarTimer) {
+				clearTimeout(snackbarTimer)
+				snackbarTimer = null
+			}
+		}
+
 		function showWarning(msg) {
-			warningBanner.textContent = msg
-			warningBanner.style.display = 'block'
-			successBanner.style.display = 'none'
+			showSnackbar(msg, 'Dismiss', null, 5000)
 		}
 
 		function clearWarning() {
-			warningBanner.style.display = 'none'
+			// Banner clear compatibility
 		}
 
 		function showSuccess(msg) {
-			successBanner.textContent = msg
-			successBanner.style.display = 'block'
-			warningBanner.style.display = 'none'
-			setTimeout(() => {
-				successBanner.style.display = 'none'
-			}, 3000)
+			showSnackbar(msg, 'Dismiss', null, 3500)
 		}
 
 		if (window.api) {
