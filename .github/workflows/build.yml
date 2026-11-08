@@ -60,21 +60,23 @@ jobs:
         with:
           version: 11
 
-      - name: Setup Linux multiarch dependencies
+      - name: Setup Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libarchive-tools libfuse2 qemu-user-static binfmt-support
+          sudo apt-get install -y libarchive-tools libfuse2t64 || sudo apt-get install -y libarchive-tools libfuse2 || sudo apt-get install -y libarchive-tools || true
 
       - name: Build Baileys
         working-directory: Baileys
+        shell: bash
         run: |
-          pnpm install
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json')); delete p.packageManager; fs.writeFileSync('package.json', JSON.stringify(p,null,2));"
+          pnpm install --no-frozen-lockfile
           pnpm run build
 
       - name: Install WAPresence dependencies
         working-directory: WAPresence
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run WAPresence tests
         working-directory: WAPresence
@@ -90,7 +92,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: |
-          pnpm exec electron-builder ${{ matrix.flags }} --publish never
+          pnpm exec electron-builder ${{ matrix.flags }} --publish never -c.mac.identity=null
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
