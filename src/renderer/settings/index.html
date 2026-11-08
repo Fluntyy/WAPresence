@@ -281,20 +281,7 @@
 
 		<!-- Main Settings Card -->
 		<section class="md3-card">
-			<div class="row-flex">
-				<div style="display: flex; align-items: center; gap: 8px;">
-					<md-outlined-text-field
-						id="update-every"
-						type="number"
-						label="Update Every"
-						suffix-text="sec"
-						min="1"
-						max="60"
-						value="1"
-						style="width: 140px;">
-					</md-outlined-text-field>
-				</div>
-
+			<div class="row-flex" style="justify-content: flex-start;">
 				<!-- Source Segmented Control -->
 				<div class="source-segmented">
 					<button type="button" class="source-btn active" id="src-local" data-source="Local">
@@ -588,6 +575,24 @@
 		</div>
 	</md-dialog>
 
+	<!-- Exit Application Confirmation Dialog -->
+	<md-dialog id="exit-dialog">
+		<div slot="headline" class="dialog-headline">
+			<span class="material-symbols-rounded" style="color: var(--md-sys-color-error, #ef4444);">power_settings_new</span>
+			Exit WAPresence?
+		</div>
+		<div slot="content" class="dialog-content-body" style="padding: 10px 28px 24px 28px; color: var(--md-sys-color-on-surface-variant); font-size: 14px; line-height: 1.5;">
+			Do you want to exit WAPresence? Active presence updating will stop and your original WhatsApp About status will be restored.
+		</div>
+		<div slot="actions" class="dialog-actions">
+			<md-text-button id="btn-exit-cancel">Cancel</md-text-button>
+			<md-filled-button id="btn-exit-confirm" style="--md-sys-color-primary: #ef4444; --md-sys-color-on-primary: #ffffff;">
+				<span class="material-symbols-rounded" slot="icon">power_settings_new</span>
+				Exit
+			</md-filled-button>
+		</div>
+	</md-dialog>
+
 	<!-- Material Design 3 Snackbar / Toaster -->
 	<div id="m3-snackbar" class="m3-snackbar" role="status" aria-live="polite">
 		<span id="m3-snackbar-text" class="m3-snackbar-text"></span>
@@ -613,7 +618,6 @@
 		})
 
 		// DOM references
-		const updateEveryInput = document.getElementById('update-every')
 		const formatTextInput = document.getElementById('format-text')
 		const charCounter = document.getElementById('char-counter')
 		const chipSet = document.getElementById('chip-set')
@@ -640,6 +644,10 @@
 		const prefPauseEmoji = document.getElementById('pref-pause-emoji')
 		const prefPluginPort = document.getElementById('pref-plugin-port')
 
+		const exitDialog = document.getElementById('exit-dialog')
+		const btnExitCancel = document.getElementById('btn-exit-cancel')
+		const btnExitConfirm = document.getElementById('btn-exit-confirm')
+
 		const logoutDialog = document.getElementById('logout-dialog')
 		const btnLogoutCancel = document.getElementById('btn-logout-cancel')
 		const btnLogoutConfirm = document.getElementById('btn-logout-confirm')
@@ -656,7 +664,7 @@
 		const linkPluginDocs = document.getElementById('link-plugin-docs')
 
 		function checkAnyDialogOpen() {
-			const dialogs = [prefDialog, logoutDialog, resetDialog, pluginWarningDialog].filter(Boolean)
+			const dialogs = [prefDialog, exitDialog, logoutDialog, resetDialog, pluginWarningDialog].filter(Boolean)
 			return dialogs.some(d => d.hasAttribute('open') || d.open)
 		}
 
@@ -675,6 +683,7 @@
 			})
 		}
 		setupDialogBlur(prefDialog)
+		setupDialogBlur(exitDialog)
 		setupDialogBlur(logoutDialog)
 		setupDialogBlur(resetDialog)
 		setupDialogBlur(pluginWarningDialog)
@@ -686,6 +695,7 @@
 			}
 		})
 		if (prefDialog) dialogObserver.observe(prefDialog, { attributes: true, attributeFilter: ['open'] })
+		if (exitDialog) dialogObserver.observe(exitDialog, { attributes: true, attributeFilter: ['open'] })
 		if (logoutDialog) dialogObserver.observe(logoutDialog, { attributes: true, attributeFilter: ['open'] })
 		if (resetDialog) dialogObserver.observe(resetDialog, { attributes: true, attributeFilter: ['open'] })
 		if (pluginWarningDialog) dialogObserver.observe(pluginWarningDialog, { attributes: true, attributeFilter: ['open'] })
@@ -1086,7 +1096,6 @@
 			if (!window.api) return
 			currentConfig = await window.api.getConfig()
 
-			updateEveryInput.value = String(currentConfig.updateEvery)
 			formatTextInput.value = currentConfig.format || ''
 			prefPluginPort.value = String(currentConfig.pluginPort || 6970)
 			prefPausedTimeout.value = String(currentConfig.pausedTimeout ?? 30)
@@ -1152,7 +1161,6 @@
 		}
 
 		document.getElementById('btn-save').addEventListener('click', async () => {
-			const interval = parseInt(updateEveryInput.value, 10) || 1
 			const format = (formatTextInput.value || '').trim() || 'Listening to [artist] - [title]'
 			const pluginPort = parseInt(prefPluginPort.value, 10) || 6970
 			const pausedTimeout = Math.max(0, parseInt(prefPausedTimeout.value, 10) || 0)
@@ -1161,7 +1169,7 @@
 
 			const newConfig = {
 				...currentConfig,
-				updateEvery: Math.max(1, Math.min(60, interval)),
+				updateEvery: currentConfig.updateEvery || 1,
 				format,
 				source: currentSource,
 				theme: prefTheme.value || 'System',
@@ -1199,7 +1207,6 @@
 			resetDialog.close()
 			document.body.classList.remove('dialog-open')
 			currentConfig = await window.api.resetConfig()
-			updateEveryInput.value = String(currentConfig.updateEvery)
 			formatTextInput.value = currentConfig.format
 			setSource('Local')
 			prefTheme.value = currentConfig.theme || 'System'
@@ -1218,6 +1225,18 @@
 		})
 
 		document.getElementById('btn-exit').addEventListener('click', () => {
+			document.body.classList.add('dialog-open')
+			exitDialog.show()
+		})
+
+		btnExitCancel.addEventListener('click', () => {
+			exitDialog.close()
+			document.body.classList.remove('dialog-open')
+		})
+
+		btnExitConfirm.addEventListener('click', () => {
+			exitDialog.close()
+			document.body.classList.remove('dialog-open')
 			window.api?.exitApp()
 		})
 
