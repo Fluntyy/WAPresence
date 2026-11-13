@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, ipcMain, shell, Notification, nativeImage, nativeTheme } from 'electron'
+import { app, BrowserWindow, Tray, Menu, ipcMain, shell, Notification, nativeImage, nativeTheme, powerMonitor, powerSaveBlocker } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -35,6 +35,7 @@ if (!gotTheLock) {
 let loginWindow: BrowserWindow | null = null
 let settingsWindow: BrowserWindow | null = null
 let spotifyDialog: BrowserWindow | null = null
+let sessionWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 
 let isLaunchedHidden = isStartedHidden()
@@ -77,13 +78,22 @@ function getIconPath(): string {
 	return asarIcon
 }
 
+let activeNotification: Notification | null = null
+
 function showNotification(title: string, body: string) {
 	if (Notification.isSupported()) {
-		new Notification({
+		if (activeNotification) {
+			try {
+				activeNotification.close()
+			} catch {}
+			activeNotification = null
+		}
+		activeNotification = new Notification({
 			title,
 			body,
 			icon: getAppIcon()
-		}).show()
+		})
+		activeNotification.show()
 	}
 }
 
@@ -131,6 +141,37 @@ function getPreloadPath(): string {
 	const candidateJs = path.resolve(currentDir, '..', 'preload', 'index.js')
 	if (fs.existsSync(candidateJs)) return candidateJs
 	return path.join(app.getAppPath(), 'dist', 'preload', 'index.js')
+}
+
+function createSessionWindow() {
+	if (sessionWindow && !sessionWindow.isDestroyed()) return
+
+	sessionWindow = new BrowserWindow({
+		width: 1,
+		height: 1,
+		show: false,
+		frame: false,
+		skipTaskbar: true,
+		focusable: false,
+		webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+			backgroundThrottling: false
+		}
+	})
+
+	sessionWindow.loadURL('about:blank')
+
+	sessionWindow.on('query-session-end', async (event: Electron.WindowSessionEndEvent) => {
+		event.preventDefault()
+		log.info({ reasons: event.reasons }, 'OS session ending on sessionWindow; preventing shutdown to restore bio')
+		await gracefulExit()
+	})
+
+	sessionWindow.on('session-end', async () => {
+		log.info('OS session-end received on sessionWindow; running graceful exit')
+		await gracefulExit()
+	})
 }
 
 function createLoginWindow() {
@@ -182,10 +223,15 @@ function createLoginWindow() {
 		}
 	})
 
-	loginWindow.on('query-session-end', (event: Electron.WindowSessionEndEvent) => {
+	loginWindow.on('query-session-end', async (event: Electron.WindowSessionEndEvent) => {
 		event.preventDefault()
-		log.info('OS session ending on loginWindow; running graceful exit')
-		gracefulExit()
+		log.info({ reasons: event.reasons }, 'OS query-session-end received on loginWindow; preventing shutdown to restore bio')
+		await gracefulExit()
+	})
+
+	loginWindow.on('session-end', async () => {
+		log.info('OS session-end received on loginWindow; running graceful exit')
+		await gracefulExit()
 	})
 
 	loginWindow.on('closed', () => {
@@ -259,10 +305,15 @@ function createSettingsWindow() {
 		}
 	})
 
-	settingsWindow.on('query-session-end', (event: Electron.WindowSessionEndEvent) => {
+	settingsWindow.on('query-session-end', async (event: Electron.WindowSessionEndEvent) => {
 		event.preventDefault()
-		log.info('OS session ending on settingsWindow; running graceful exit')
-		gracefulExit()
+		log.info({ reasons: event.reasons }, 'OS query-session-end received on settingsWindow; preventing shutdown to restore bio')
+		await gracefulExit()
+	})
+
+	settingsWindow.on('session-end', async () => {
+		log.info('OS session-end received on settingsWindow; running graceful exit')
+		await gracefulExit()
 	})
 
 	settingsWindow.on('closed', () => {
@@ -325,6 +376,17 @@ function createSpotifyDialog(): Promise<any> {
 		})
 
 		spotifyDialog.loadFile(getHtmlPath('spotify-setup/index.html'))
+
+		spotifyDialog.on('query-session-end', async (event: Electron.WindowSessionEndEvent) => {
+			event.preventDefault()
+			log.info({ reasons: event.reasons }, 'OS query-session-end received on spotifyDialog; preventing shutdown to restore bio')
+			await gracefulExit()
+		})
+
+		spotifyDialog.on('session-end', async () => {
+			log.info('OS session-end received on spotifyDialog; running graceful exit')
+			await gracefulExit()
+		})
 
 		spotifyDialog.on('closed', () => {
 			spotifyDialog = null
@@ -457,48 +519,69 @@ async function handleLogout() {
 	}
 }
 
+let exitPromise: Promise<void> | null = null
+
 async function gracefulExit() {
-	if (isQuitting) return
+	if (exitPromise) return exitPromise
 	isQuitting = true
 	log.info('Initiating graceful shutdown; prioritizing WhatsApp bio restoration')
 
-	// 1. Immediately stop presence update loop to prevent subsequent status overwrites
-	if (presenceUpdater) {
+	exitPromise = (async () => {
+		let blockerId: number | null = null
 		try {
-			await presenceUpdater.stop()
-		} catch (err) {
-			log.warn({ err }, 'Error stopping presence updater')
+			blockerId = powerSaveBlocker.start('prevent-app-suspension')
+		} catch {}
+
+		// 1. Immediately stop presence update loop to prevent subsequent status overwrites
+		if (presenceUpdater) {
+			try {
+				await presenceUpdater.stop()
+			} catch (err) {
+				log.warn({ err }, 'Error stopping presence updater')
+			}
 		}
-	}
 
-	// 2. Immediately restore original WhatsApp bio and disconnect client
-	try {
-		const disconnectPromise = whatsappClient.disconnect()
-		const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3500))
-		await Promise.race([disconnectPromise, timeoutPromise])
-	} catch (err) {
-		log.warn({ err }, 'Error disconnecting WhatsApp client')
-	}
+		// 2. Immediately restore original WhatsApp bio and disconnect client
+		try {
+			const disconnectPromise = whatsappClient.disconnect()
+			const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 4000))
+			await Promise.race([disconnectPromise, timeoutPromise])
+		} catch (err) {
+			log.warn({ err }, 'Error disconnecting WhatsApp client')
+		}
 
-	// 3. Cleanly destroy UI elements and force fast exit
-	if (settingsWindow && !settingsWindow.isDestroyed()) {
-		settingsWindow.destroy()
-		settingsWindow = null
-	}
-	if (loginWindow && !loginWindow.isDestroyed()) {
-		loginWindow.destroy()
-		loginWindow = null
-	}
-	if (spotifyDialog && !spotifyDialog.isDestroyed()) {
-		spotifyDialog.destroy()
-		spotifyDialog = null
-	}
-	if (tray && !tray.isDestroyed()) {
-		tray.destroy()
-		tray = null
-	}
+		if (blockerId !== null && powerSaveBlocker.isStarted(blockerId)) {
+			try {
+				powerSaveBlocker.stop(blockerId)
+			} catch {}
+		}
 
-	app.exit(0)
+		// 3. Cleanly destroy UI elements and force fast exit
+		if (settingsWindow && !settingsWindow.isDestroyed()) {
+			settingsWindow.destroy()
+			settingsWindow = null
+		}
+		if (loginWindow && !loginWindow.isDestroyed()) {
+			loginWindow.destroy()
+			loginWindow = null
+		}
+		if (spotifyDialog && !spotifyDialog.isDestroyed()) {
+			spotifyDialog.destroy()
+			spotifyDialog = null
+		}
+		if (sessionWindow && !sessionWindow.isDestroyed()) {
+			sessionWindow.destroy()
+			sessionWindow = null
+		}
+		if (tray && !tray.isDestroyed()) {
+			tray.destroy()
+			tray = null
+		}
+
+		app.exit(0)
+	})()
+
+	return exitPromise
 }
 
 // IPC Handlers
@@ -726,6 +809,8 @@ function initPresenceUpdater() {
 
 // WhatsApp client event bridging
 function setupWhatsAppEvents() {
+	let hasNotifiedDisconnected = false
+
 	whatsappClient.on('qr', (dataUrl: string) => {
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
 			settingsWindow.close()
@@ -745,6 +830,7 @@ function setupWhatsAppEvents() {
 	})
 
 	whatsappClient.on('connected', async () => {
+		hasNotifiedDisconnected = false
 		log.info('WhatsApp connected event received in main process')
 		const hadLoginWindow = Boolean(loginWindow && !loginWindow.isDestroyed())
 		if (hadLoginWindow) {
@@ -792,12 +878,14 @@ function setupWhatsAppEvents() {
 			settingsWindow.webContents.send('whatsapp:status', 'disconnected')
 		}
 		updateTrayMenu()
-		if (config.notifyOnConnection) {
-			showNotification('WAPresence', 'Reconnecting to WhatsApp...')
+		if (config.notifyOnConnection && !hasNotifiedDisconnected) {
+			hasNotifiedDisconnected = true
+			showNotification('WAPresence', 'Disconnected from WhatsApp. Reconnecting...')
 		}
 	})
 
 	whatsappClient.on('logged_out', () => {
+		hasNotifiedDisconnected = false
 		if (settingsWindow && !settingsWindow.isDestroyed()) {
 			settingsWindow.close()
 			settingsWindow = null
@@ -875,11 +963,25 @@ app.on('second-instance', () => {
 
 app.whenReady().then(async () => {
 	log.info({ isLaunchedHidden }, 'WAPresence starting up')
+	createSessionWindow()
 	setupIpcHandlers()
 	setupWhatsAppEvents()
 	setupUpdaterEvents()
 	createTray()
 	initPresenceUpdater()
+
+	// Register powerMonitor shutdown handler (cross-platform OS shutdown detection on Linux & macOS)
+	try {
+		;(powerMonitor as any).on('shutdown', (event: any) => {
+			log.info('powerMonitor shutdown event received; preventing shutdown to restore bio')
+			if (event && typeof event.preventDefault === 'function') {
+				event.preventDefault()
+			}
+			gracefulExit()
+		})
+	} catch (err) {
+		log.warn({ err }, 'Failed to attach powerMonitor shutdown handler')
+	}
 
 	// Synchronize autostart with config on startup
 	if (config.startWithOS) {
@@ -927,7 +1029,7 @@ app.on('will-quit', (event: Electron.Event) => {
 	}
 })
 
-const terminationSignals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM', 'SIGBREAK', 'SIGHUP']
+const terminationSignals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM', 'SIGBREAK', 'SIGHUP', 'SIGQUIT']
 terminationSignals.forEach((sig) => {
 	try {
 		process.on(sig, () => {

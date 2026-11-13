@@ -496,7 +496,7 @@
 					<span class="material-symbols-rounded">update</span>
 					Application Updates
 				</div>
-				<div class="pref-info-desc" id="updater-status-desc">Version: v1.2.0 (Checking for updates...)</div>
+				<div class="pref-info-desc" id="updater-status-desc">Version: v1.2.1 (Checking for updates...)</div>
 
 				<md-linear-progress id="updater-progress" style="display: none; width: 100%;"></md-linear-progress>
 
@@ -788,8 +788,39 @@
 			}
 		})
 
+		function saveCurrentFormatToConfig() {
+			const text = (formatTextInput.value || '').trim() || 'Listening to [artist] - [title]'
+			if (currentSource === 'Spotify') {
+				currentConfig.formatSpotify = text
+			} else if (currentSource === 'Plugin') {
+				currentConfig.formatPlugin = text
+			} else {
+				currentConfig.formatLocal = text
+			}
+			currentConfig.format = text
+		}
+
+		function loadFormatForSource(src) {
+			let text = ''
+			if (src === 'Spotify') {
+				text = currentConfig.formatSpotify || currentConfig.format || 'Listening to [artist] - [title]'
+			} else if (src === 'Plugin') {
+				text = currentConfig.formatPlugin || currentConfig.format || 'Listening to [artist] - [title]'
+			} else {
+				text = currentConfig.formatLocal || currentConfig.format || 'Listening to [artist] - [title]'
+			}
+			formatTextInput.value = text
+			currentConfig.format = text
+			savedSelectionStart = text.length
+			savedSelectionEnd = text.length
+			updateCounter()
+			saveCurrentFormatToConfig()
+		}
+
 		async function switchSource(src) {
+			saveCurrentFormatToConfig()
 			setSource(src)
+			loadFormatForSource(src)
 			const port = parseInt(prefPluginPort.value, 10) || currentConfig.pluginPort || 6970
 			currentConfig.source = src
 			currentConfig.pluginPort = port
@@ -798,7 +829,11 @@
 				const res = await window.api.saveConfig({
 					...currentConfig,
 					source: src,
-					pluginPort: port
+					pluginPort: port,
+					format: formatTextInput.value,
+					formatLocal: currentConfig.formatLocal,
+					formatSpotify: currentConfig.formatSpotify,
+					formatPlugin: currentConfig.formatPlugin
 				})
 				if (res && !res.success) {
 					showWarning(res.error || 'Failed to switch media source')
@@ -905,6 +940,7 @@
 		formatTextInput.addEventListener('input', () => {
 			updateCursorTracking()
 			updateCounter()
+			saveCurrentFormatToConfig()
 		})
 
 		function insertPlaceholder(p) {
@@ -938,6 +974,7 @@
 			} catch {}
 
 			updateCounter()
+			saveCurrentFormatToConfig()
 		}
 
 		function renderPlaceholders(list) {
@@ -1101,14 +1138,19 @@
 			if (!window.api) return
 			currentConfig = await window.api.getConfig()
 
-			formatTextInput.value = currentConfig.format || ''
+			currentConfig.formatLocal = currentConfig.formatLocal || currentConfig.format || 'Listening to [artist] - [title]'
+			currentConfig.formatSpotify = currentConfig.formatSpotify || currentConfig.format || 'Listening to [artist] - [title]'
+			currentConfig.formatPlugin = currentConfig.formatPlugin || currentConfig.format || 'Listening to [artist] - [title]'
+
+			setSource(currentConfig.source || 'Local')
+			loadFormatForSource(currentConfig.source || 'Local')
+
 			prefPluginPort.value = String(currentConfig.pluginPort || 6970)
 			prefPausedTimeout.value = String(currentConfig.pausedTimeout ?? 30)
 			prefBlacklistApps.value = Array.isArray(currentConfig.blacklistApps) ? currentConfig.blacklistApps.join(', ') : ''
 			prefExcludeRegex.value = currentConfig.excludeRegex || ''
 			prefNotifyMinimize.selected = Boolean(currentConfig.notifyOnMinimize)
 			prefNotifyConnection.selected = currentConfig.notifyOnConnection ?? true
-			setSource(currentConfig.source || 'Local')
 
 			prefTheme.value = currentConfig.theme || 'System'
 			updateTheme(currentConfig.theme || 'System')
@@ -1166,6 +1208,7 @@
 		}
 
 		document.getElementById('btn-save').addEventListener('click', async () => {
+			saveCurrentFormatToConfig()
 			const format = (formatTextInput.value || '').trim() || 'Listening to [artist] - [title]'
 			const pluginPort = parseInt(prefPluginPort.value, 10) || 6970
 			const pausedTimeout = Math.max(0, parseInt(prefPausedTimeout.value, 10) || 0)
@@ -1176,6 +1219,9 @@
 				...currentConfig,
 				updateEvery: currentConfig.updateEvery || 1,
 				format,
+				formatLocal: currentConfig.formatLocal,
+				formatSpotify: currentConfig.formatSpotify,
+				formatPlugin: currentConfig.formatPlugin,
 				source: currentSource,
 				theme: prefTheme.value || 'System',
 				startWithOS: Boolean(prefStartOs.selected),
@@ -1212,8 +1258,8 @@
 			resetDialog.close()
 			document.body.classList.remove('dialog-open')
 			currentConfig = await window.api.resetConfig()
-			formatTextInput.value = currentConfig.format
 			setSource('Local')
+			loadFormatForSource('Local')
 			prefTheme.value = currentConfig.theme || 'System'
 			updateTheme(currentConfig.theme)
 			prefStartOs.selected = currentConfig.startWithOS

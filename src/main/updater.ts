@@ -237,8 +237,14 @@ export class PresenceUpdater extends EventEmitter {
 			this.lastTrack = currentTrack
 			const originalBio = this.client.getOriginalBio()
 
+			const activeFormat = this.config.source === 'Spotify'
+				? (this.config.formatSpotify || this.config.format)
+				: (this.config.source === 'Plugin'
+					? (this.config.formatPlugin || this.config.format)
+					: (this.config.formatLocal || this.config.format))
+
 			const targetText = formatMediaStatus(
-				this.config.format,
+				activeFormat,
 				currentTrack,
 				originalBio,
 				MAX_ABOUT_LENGTH,
@@ -319,7 +325,16 @@ export class PresenceUpdater extends EventEmitter {
 		const pluginPortChanged =
 			newConfig.source === 'Plugin' && this.config.pluginPort !== newConfig.pluginPort
 
-		this.config = newConfig
+		const activeFormat = newConfig.source === 'Spotify'
+			? (newConfig.formatSpotify || newConfig.format)
+			: (newConfig.source === 'Plugin'
+				? (newConfig.formatPlugin || newConfig.format)
+				: (newConfig.formatLocal || newConfig.format))
+
+		this.config = {
+			...newConfig,
+			format: activeFormat
+		}
 
 		if (sourceChanged || spotifyCredsChanged || pluginPortChanged) {
 			log.info('Media source configuration changed, re-initializing media source')

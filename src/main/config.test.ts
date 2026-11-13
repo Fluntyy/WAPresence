@@ -10,6 +10,9 @@ import {
 	getDefaultConfig,
 	DEFAULT_UPDATE_EVERY,
 	DEFAULT_FORMAT,
+	DEFAULT_FORMAT_LOCAL,
+	DEFAULT_FORMAT_SPOTIFY,
+	DEFAULT_FORMAT_PLUGIN,
 	DEFAULT_SOURCE,
 	DEFAULT_REDIRECT_URI,
 	DEFAULT_THEME,
@@ -43,6 +46,9 @@ describe('config', () => {
 		expect(cfg).toEqual({
 			updateEvery: DEFAULT_UPDATE_EVERY,
 			format: DEFAULT_FORMAT,
+			formatLocal: DEFAULT_FORMAT_LOCAL,
+			formatSpotify: DEFAULT_FORMAT_SPOTIFY,
+			formatPlugin: DEFAULT_FORMAT_PLUGIN,
 			source: DEFAULT_SOURCE,
 			clientID: '',
 			redirectURI: DEFAULT_REDIRECT_URI,
@@ -98,6 +104,34 @@ RedirectURI = http://127.0.0.1:6969/callback
 		expect(cfg.notifyOnConnection).toBe(false)
 		expect(cfg.clientID).toBe('test-client-id')
 		expect(cfg.redirectURI).toBe('http://127.0.0.1:6969/callback')
+	})
+
+	it('loads and saves independent bio format text for each media source', () => {
+		const iniContent = `[Configuration]
+Format = Fallback
+FormatLocal = Local: [title]
+FormatSpotify = Spotify: [artist] - [title]
+FormatPlugin = Plugin: [device] [title]
+Source = Plugin
+`
+		fs.writeFileSync(tempConfigFile, iniContent, 'utf-8')
+		const cfg = loadConfig(tempConfigFile)
+		expect(cfg.formatLocal).toBe('Local: [title]')
+		expect(cfg.formatSpotify).toBe('Spotify: [artist] - [title]')
+		expect(cfg.formatPlugin).toBe('Plugin: [device] [title]')
+		expect(cfg.format).toBe('Plugin: [device] [title]')
+
+		// Switch to Local and save
+		cfg.source = 'Local'
+		cfg.format = cfg.formatLocal
+		saveConfig(tempConfigFile, cfg)
+
+		const reloaded = loadConfig(tempConfigFile)
+		expect(reloaded.source).toBe('Local')
+		expect(reloaded.format).toBe('Local: [title]')
+		expect(reloaded.formatLocal).toBe('Local: [title]')
+		expect(reloaded.formatSpotify).toBe('Spotify: [artist] - [title]')
+		expect(reloaded.formatPlugin).toBe('Plugin: [device] [title]')
 	})
 
 	it('migrates localhost to 127.0.0.1 in RedirectURI', () => {

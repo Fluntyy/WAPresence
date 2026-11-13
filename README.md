@@ -31,19 +31,10 @@ This project uses WhiskeySockets/Baileys PR #2798 by `crowroser`:
 - **Branch**: `fix/update-profile-status-about`
 - **Pinned Commit SHA**: `7fadfe38a01fc4ad0102e008c5007e7f5c940851`
 
-### Installation Method
-Because upstream git dependencies do not commit the compiled `lib/` directory, installing directly via git URL fails without a prior compile step:
-1. Clone the fork locally into `../Baileys` on branch `fix/update-profile-status-about`.
-2. Build the fork:
-   ```bash
-   npm run build
-   # or: pnpm run build
-   ```
-3. Link into WAPresence via local package path:
-   ```bash
-   npm install ../Baileys
-   # or: pnpm add file:../Baileys
-   ```
+> **Note**: This fork is not official and is maintained separately. It is required to support WhatsApp's GraphQL MEX status mutation.
+
+### Building from Source
+For complete, step-by-step instructions on setting up your directory structure and compiling both repositories from source, see **[BUILDING.md](BUILDING.md)**.
 
 ---
 

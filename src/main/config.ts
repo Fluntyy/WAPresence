@@ -5,6 +5,9 @@ import { getConfigPath } from './paths.js'
 
 export const DEFAULT_UPDATE_EVERY = 1
 export const DEFAULT_FORMAT = 'Listening to [artist] - [title]'
+export const DEFAULT_FORMAT_LOCAL = 'Listening to [artist] - [title]'
+export const DEFAULT_FORMAT_SPOTIFY = 'Listening to [artist] - [title]'
+export const DEFAULT_FORMAT_PLUGIN = 'Listening to [artist] - [title]'
 export const DEFAULT_SOURCE = 'Local'
 export const DEFAULT_REDIRECT_URI = 'http://127.0.0.1:6969/callback'
 export const DEFAULT_CONFIG_FILE = 'config.ini'
@@ -27,6 +30,9 @@ export type AppTheme = 'System' | 'Light' | 'Dark'
 export interface AppConfig {
 	updateEvery: number
 	format: string
+	formatLocal: string
+	formatSpotify: string
+	formatPlugin: string
 	source: AppSource
 	clientID: string
 	redirectURI: string
@@ -45,6 +51,9 @@ export function getDefaultConfig(): AppConfig {
 	return {
 		updateEvery: DEFAULT_UPDATE_EVERY,
 		format: DEFAULT_FORMAT,
+		formatLocal: DEFAULT_FORMAT_LOCAL,
+		formatSpotify: DEFAULT_FORMAT_SPOTIFY,
+		formatPlugin: DEFAULT_FORMAT_PLUGIN,
 		source: DEFAULT_SOURCE,
 		clientID: '',
 		redirectURI: DEFAULT_REDIRECT_URI,
@@ -70,6 +79,24 @@ export function validateConfig(config: Partial<AppConfig>): void {
 	if (config.format !== undefined) {
 		if (typeof config.format !== 'string' || config.format.trim().length === 0) {
 			throw new Error('Format text cannot be empty')
+		}
+	}
+
+	if (config.formatLocal !== undefined) {
+		if (typeof config.formatLocal !== 'string' || config.formatLocal.trim().length === 0) {
+			throw new Error('Local format text cannot be empty')
+		}
+	}
+
+	if (config.formatSpotify !== undefined) {
+		if (typeof config.formatSpotify !== 'string' || config.formatSpotify.trim().length === 0) {
+			throw new Error('Spotify format text cannot be empty')
+		}
+	}
+
+	if (config.formatPlugin !== undefined) {
+		if (typeof config.formatPlugin !== 'string' || config.formatPlugin.trim().length === 0) {
+			throw new Error('Plugin format text cannot be empty')
 		}
 	}
 
@@ -143,11 +170,38 @@ export function loadConfig(filePath?: string): AppConfig {
 			current.format = configuration.Format
 		}
 
+		if (configuration.FormatLocal !== undefined && typeof configuration.FormatLocal === 'string' && configuration.FormatLocal.trim().length > 0) {
+			current.formatLocal = configuration.FormatLocal
+		} else {
+			current.formatLocal = current.format || DEFAULT_FORMAT_LOCAL
+		}
+
+		if (configuration.FormatSpotify !== undefined && typeof configuration.FormatSpotify === 'string' && configuration.FormatSpotify.trim().length > 0) {
+			current.formatSpotify = configuration.FormatSpotify
+		} else {
+			current.formatSpotify = current.format || DEFAULT_FORMAT_SPOTIFY
+		}
+
+		if (configuration.FormatPlugin !== undefined && typeof configuration.FormatPlugin === 'string' && configuration.FormatPlugin.trim().length > 0) {
+			current.formatPlugin = configuration.FormatPlugin
+		} else {
+			current.formatPlugin = current.format || DEFAULT_FORMAT_PLUGIN
+		}
+
 		if (configuration.Source !== undefined && typeof configuration.Source === 'string') {
 			const srcLower = configuration.Source.toLowerCase()
 			if (srcLower === 'spotify') current.source = 'Spotify'
 			else if (srcLower === 'plugin') current.source = 'Plugin'
 			else current.source = 'Local'
+		}
+
+		// Synchronize active format with the selected source
+		if (current.source === 'Spotify') {
+			current.format = current.formatSpotify || current.format || DEFAULT_FORMAT
+		} else if (current.source === 'Plugin') {
+			current.format = current.formatPlugin || current.format || DEFAULT_FORMAT
+		} else {
+			current.format = current.formatLocal || current.format || DEFAULT_FORMAT
 		}
 
 		if (configuration.Theme !== undefined && typeof configuration.Theme === 'string') {
@@ -230,6 +284,9 @@ export function saveConfig(filePath?: string, config?: AppConfig): void {
 		Configuration: {
 			UpdateEvery: targetConfig.updateEvery,
 			Format: targetConfig.format,
+			FormatLocal: targetConfig.formatLocal || targetConfig.format || DEFAULT_FORMAT_LOCAL,
+			FormatSpotify: targetConfig.formatSpotify || targetConfig.format || DEFAULT_FORMAT_SPOTIFY,
+			FormatPlugin: targetConfig.formatPlugin || targetConfig.format || DEFAULT_FORMAT_PLUGIN,
 			Source: targetConfig.source,
 			Theme: targetConfig.theme || DEFAULT_THEME,
 			StartWithOS: targetConfig.startWithOS ?? DEFAULT_START_WITH_OS,
