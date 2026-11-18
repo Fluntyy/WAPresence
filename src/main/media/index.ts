@@ -1,6 +1,7 @@
 import { IMediaSource } from './types.js'
 import { WindowsSmtcSource } from './windows-smtc.js'
 import { LinuxMprisSource } from './linux-mpris.js'
+import { MacosMediaSource } from './macos-media.js'
 import { UnsupportedMediaSource } from './unsupported.js'
 import { SpotifySource } from './spotify.js'
 import { PluginSource } from './plugin.js'
@@ -10,6 +11,7 @@ export * from './types.js'
 export * from './spotify.js'
 export * from './windows-smtc.js'
 export * from './linux-mpris.js'
+export * from './macos-media.js'
 export * from './unsupported.js'
 export * from './plugin.js'
 
@@ -30,6 +32,8 @@ export function createMediaSource(config: AppConfig): IMediaSource {
 		return new WindowsSmtcSource()
 	} else if (platform === 'linux') {
 		return new LinuxMprisSource()
+	} else if (platform === 'darwin') {
+		return new MacosMediaSource()
 	} else {
 		return new UnsupportedMediaSource()
 	}

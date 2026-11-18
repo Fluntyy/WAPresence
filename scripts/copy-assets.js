@@ -3,13 +3,15 @@ import path from 'node:path'
 
 const projectRoot = process.cwd()
 
-// Ensure dist/main/media exists and copy smtc-helper.ps1
-const smtcSrc = path.join(projectRoot, 'src', 'main', 'media', 'smtc-helper.ps1')
-const smtcDist = path.join(projectRoot, 'dist', 'main', 'media', 'smtc-helper.ps1')
-if (fs.existsSync(smtcSrc)) {
-	fs.mkdirSync(path.dirname(smtcDist), { recursive: true })
-	fs.copyFileSync(smtcSrc, smtcDist)
-	console.log(`Copied smtc-helper.ps1 -> ${smtcDist}`)
+// Ensure dist/main/media exists and copy platform media helper scripts
+for (const helperFile of ['smtc-helper.ps1', 'macos-media-helper.js']) {
+	const helperSrc = path.join(projectRoot, 'src', 'main', 'media', helperFile)
+	const helperDist = path.join(projectRoot, 'dist', 'main', 'media', helperFile)
+	if (fs.existsSync(helperSrc)) {
+		fs.mkdirSync(path.dirname(helperDist), { recursive: true })
+		fs.copyFileSync(helperSrc, helperDist)
+		console.log(`Copied ${helperFile} -> ${helperDist}`)
+	}
 }
 
 // Ensure assets/fonts are copied to renderer assets

@@ -11,7 +11,8 @@
     "package.json"
   ],
   "asarUnpack": [
-    "**/smtc-helper.ps1"
+    "**/smtc-helper.ps1",
+    "**/macos-media-helper.js"
   ],
   "publish": {
     "provider": "github",
