@@ -1006,6 +1006,9 @@
 			const excludeRegex = (prefExcludeRegex.value || '').trim()
 			const notifyOnMinimize = Boolean(prefNotifyMinimize.selected)
 			const notifyOnConnection = Boolean(prefNotifyConnection.selected)
+			const theme = prefTheme.value || currentConfig.theme || 'System'
+			const startWithOS = Boolean(prefStartOs.selected)
+			const appendPauseEmoji = Boolean(prefPauseEmoji.selected)
 
 			currentConfig.pluginPort = port
 			currentConfig.pausedTimeout = pausedTimeout
@@ -1013,6 +1016,9 @@
 			currentConfig.excludeRegex = excludeRegex
 			currentConfig.notifyOnMinimize = notifyOnMinimize
 			currentConfig.notifyOnConnection = notifyOnConnection
+			currentConfig.theme = theme
+			currentConfig.startWithOS = startWithOS
+			currentConfig.appendPauseEmoji = appendPauseEmoji
 
 			if (currentSource === 'Plugin') {
 				sourceVal.textContent = `Plugin (Port ${port})`
@@ -1052,8 +1058,13 @@
 
 		prefTheme.addEventListener('change', async () => {
 			const theme = prefTheme.value || 'System'
+			currentConfig.theme = theme
 			updateTheme(theme)
 			await window.api.setTheme(theme)
+		})
+
+		prefPauseEmoji.addEventListener('change', () => {
+			currentConfig.appendPauseEmoji = Boolean(prefPauseEmoji.selected)
 		})
 
 		prefStartOs.addEventListener('change', async () => {
