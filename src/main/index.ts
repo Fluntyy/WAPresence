@@ -63,19 +63,23 @@ let spotifySetupResolver: ((value: any) => void) | null = null
 function getIconPath(): string {
 	const currentFile = fileURLToPath(import.meta.url)
 	const currentDir = path.dirname(currentFile)
+	const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png'
+	const fallbackFile = process.platform === 'win32' ? 'icon.png' : 'icon.ico'
 
-	// In packaged asar, assets/icon.ico is at root of app.asar
-	const asarIcon = path.join(app.getAppPath(), 'assets', 'icon.ico')
-	if (fs.existsSync(asarIcon)) return asarIcon
+	const candidates = [
+		path.join(app.getAppPath(), 'assets', iconFile),
+		path.resolve(currentDir, '..', '..', 'assets', iconFile),
+		path.resolve(process.cwd(), 'assets', iconFile),
+		path.join(app.getAppPath(), 'assets', fallbackFile),
+		path.resolve(currentDir, '..', '..', 'assets', fallbackFile),
+		path.resolve(process.cwd(), 'assets', fallbackFile)
+	]
 
-	// In dist/main/..., assets is ../../assets/icon.ico
-	const distIcon = path.resolve(currentDir, '..', '..', 'assets', 'icon.ico')
-	if (fs.existsSync(distIcon)) return distIcon
+	for (const candidate of candidates) {
+		if (fs.existsSync(candidate)) return candidate
+	}
 
-	const rootIcon = path.resolve(process.cwd(), 'assets', 'icon.ico')
-	if (fs.existsSync(rootIcon)) return rootIcon
-
-	return asarIcon
+	return candidates[0]
 }
 
 let activeNotification: Notification | null = null
@@ -100,6 +104,34 @@ function showNotification(title: string, body: string) {
 function getAppIcon(): Electron.NativeImage {
 	const iconPath = getIconPath()
 	return nativeImage.createFromPath(iconPath)
+}
+
+function getTrayIcon(): Electron.NativeImage {
+	const icon = getAppIcon()
+	if (process.platform === 'darwin' && !icon.isEmpty()) {
+		try {
+			const trayImg = nativeImage.createEmpty()
+			const img1x = icon.resize({ width: 18, height: 18, quality: 'best' })
+			const img2x = icon.resize({ width: 36, height: 36, quality: 'best' })
+			trayImg.addRepresentation({
+				scaleFactor: 1.0,
+				width: 18,
+				height: 18,
+				buffer: img1x.toPNG()
+			})
+			trayImg.addRepresentation({
+				scaleFactor: 2.0,
+				width: 36,
+				height: 36,
+				buffer: img2x.toPNG()
+			})
+			return trayImg
+		} catch (err) {
+			log.warn({ err }, 'Failed to build HiDPI macOS tray icon; falling back to resized icon')
+			return icon.resize({ width: 18, height: 18, quality: 'best' })
+		}
+	}
+	return icon
 }
 
 function getHtmlPath(subPath: string): string {
@@ -144,6 +176,9 @@ function getPreloadPath(): string {
 }
 
 function createSessionWindow() {
+	// query-session-end / session-end are Windows WM_QUERYENDSESSION hooks;
+	// creating a hidden BrowserWindow on macOS interferes with app activation and window lifecycle.
+	if (process.platform !== 'win32') return
 	if (sessionWindow && !sessionWindow.isDestroyed()) return
 
 	sessionWindow = new BrowserWindow({
@@ -234,8 +269,13 @@ function createLoginWindow() {
 		await gracefulExit()
 	})
 
+	loginWindow.on('show', () => {
+		updateTrayMenu()
+	})
+
 	loginWindow.on('closed', () => {
 		loginWindow = null
+		updateTrayMenu()
 		if (!settingsWindow && !isQuitting && whatsappClient.getState() !== 'connected') {
 			gracefulExit()
 		}
@@ -244,8 +284,13 @@ function createLoginWindow() {
 
 function createSettingsWindow() {
 	if (settingsWindow && !settingsWindow.isDestroyed()) {
+		if (settingsWindow.isMinimized()) settingsWindow.restore()
 		settingsWindow.show()
 		settingsWindow.focus()
+		if (process.platform === 'darwin') {
+			app.focus({ steal: true })
+		}
+		updateTrayMenu()
 		return
 	}
 
@@ -257,7 +302,7 @@ function createSettingsWindow() {
 		resizable: false,
 		title: 'WAPresence',
 		icon: appIcon,
-		backgroundColor: '#121413',
+		backgroundColor: nativeTheme.shouldUseDarkColors ? '#121413' : '#f6faf7',
 		autoHideMenuBar: true,
 		webPreferences: {
 			preload: getPreloadPath(),
@@ -316,18 +361,29 @@ function createSettingsWindow() {
 		await gracefulExit()
 	})
 
+	settingsWindow.on('show', () => {
+		updateTrayMenu()
+	})
+
+	settingsWindow.on('hide', () => {
+		updateTrayMenu()
+	})
+
 	settingsWindow.on('closed', () => {
 		settingsWindow = null
 		if (spotifyDialog && !spotifyDialog.isDestroyed()) {
 			spotifyDialog.close()
 			spotifyDialog = null
 		}
+		updateTrayMenu()
 		if (typeof global.gc === 'function') {
 			try {
 				global.gc()
 			} catch {}
 		}
 	})
+
+	updateTrayMenu()
 }
 
 function createSpotifyDialog(): Promise<any> {
@@ -403,9 +459,15 @@ function openSettingsAndCheckUpdates() {
 		if (settingsWindow.isMinimized()) settingsWindow.restore()
 		settingsWindow.show()
 		settingsWindow.focus()
+		if (process.platform === 'darwin') {
+			app.focus({ steal: true })
+		}
 		settingsWindow.webContents.send('app:open-preferences-and-check-updates')
 	} else {
 		createSettingsWindow()
+		if (process.platform === 'darwin') {
+			app.focus({ steal: true })
+		}
 		if (settingsWindow) {
 			settingsWindow.webContents.once('did-finish-load', () => {
 				setTimeout(() => {
@@ -418,24 +480,63 @@ function openSettingsAndCheckUpdates() {
 	}
 }
 
+function hasExistingAuth(): boolean {
+	return fs.existsSync(path.join(getAuthDir(), 'creds.json'))
+}
+
+function isMainWindowVisible(): boolean {
+	return Boolean(
+		(settingsWindow && !settingsWindow.isDestroyed() && settingsWindow.isVisible()) ||
+		(loginWindow && !loginWindow.isDestroyed() && loginWindow.isVisible())
+	)
+}
+
+function showMainWindow() {
+	isLaunchedHidden = false
+	if (settingsWindow && !settingsWindow.isDestroyed()) {
+		if (settingsWindow.isMinimized()) settingsWindow.restore()
+		settingsWindow.show()
+		settingsWindow.focus()
+	} else if (loginWindow && !loginWindow.isDestroyed()) {
+		if (loginWindow.isMinimized()) loginWindow.restore()
+		loginWindow.show()
+		loginWindow.focus()
+	} else if (whatsappClient.getState() === 'connected' || hasExistingAuth()) {
+		createSettingsWindow()
+	} else {
+		createLoginWindow()
+	}
+
+	if (process.platform === 'darwin') {
+		app.focus({ steal: true })
+	}
+	updateTrayMenu()
+}
+
+function hideMainWindow() {
+	if (settingsWindow && !settingsWindow.isDestroyed()) {
+		settingsWindow.close()
+	} else if (loginWindow && !loginWindow.isDestroyed() && (whatsappClient.getState() === 'connected' || hasExistingAuth())) {
+		loginWindow.close()
+	}
+	updateTrayMenu()
+}
+
 function updateTrayMenu() {
 	if (!tray || tray.isDestroyed()) return
 
 	const isPaused = presenceUpdater?.isPaused() ?? false
 	const isConnected = whatsappClient.getState() === 'connected'
+	const windowVisible = isMainWindowVisible()
 
 	const contextMenu = Menu.buildFromTemplate([
 		{
-			label: 'Settings',
+			label: windowVisible ? 'Hide WAPresence' : 'Show WAPresence',
 			click: () => {
-				if (settingsWindow && !settingsWindow.isDestroyed()) {
-					if (settingsWindow.isMinimized()) settingsWindow.restore()
-					settingsWindow.show()
-					settingsWindow.focus()
-				} else if (whatsappClient.getState() === 'connected') {
-					createSettingsWindow()
+				if (isMainWindowVisible()) {
+					hideMainWindow()
 				} else {
-					createLoginWindow()
+					showMainWindow()
 				}
 			}
 		},
@@ -477,21 +578,13 @@ function updateTrayMenu() {
 function createTray() {
 	if (tray) return
 
-	const appIcon = getAppIcon()
-	tray = new Tray(appIcon)
+	const trayIcon = getTrayIcon()
+	tray = new Tray(trayIcon)
 	tray.setToolTip('WAPresence')
 	updateTrayMenu()
 
 	tray.on('double-click', () => {
-		if (settingsWindow && !settingsWindow.isDestroyed()) {
-			if (settingsWindow.isMinimized()) settingsWindow.restore()
-			settingsWindow.show()
-			settingsWindow.focus()
-		} else if (whatsappClient.getState() === 'connected') {
-			createSettingsWindow()
-		} else {
-			createLoginWindow()
-		}
+		showMainWindow()
 	})
 }
 
@@ -942,23 +1035,12 @@ function setupUpdaterEvents() {
 
 app.on('second-instance', () => {
 	log.info('Second instance launch detected; focusing or restoring existing app')
-	isLaunchedHidden = false
-	if (settingsWindow && !settingsWindow.isDestroyed()) {
-		if (settingsWindow.isMinimized()) settingsWindow.restore()
-		settingsWindow.show()
-		settingsWindow.focus()
-	} else if (loginWindow && !loginWindow.isDestroyed()) {
-		if (loginWindow.isMinimized()) loginWindow.restore()
-		loginWindow.show()
-		loginWindow.focus()
-	} else {
-		// Both windows unloaded/closed in tray: restore dashboard or login
-		if (whatsappClient.getState() === 'connected') {
-			createSettingsWindow()
-		} else {
-			createLoginWindow()
-		}
-	}
+	showMainWindow()
+})
+
+app.on('activate', () => {
+	log.info('App activate event received (macOS Dock/Spotlight); restoring window')
+	showMainWindow()
 })
 
 app.whenReady().then(async () => {
